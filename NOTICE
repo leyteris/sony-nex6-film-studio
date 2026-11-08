@@ -1,0 +1,37 @@
+Film Studio NEX-6
+
+Required Notice: Copyright (c) 2026 Film Studio NEX-6 contributors, for their respective original contributions to the extent copyright applies.
+Required Notice: Original project contributions are available under the PolyForm Noncommercial License 1.0.0. Third-party rights and licenses remain separate; see LICENSING.md.
+
+Upstream reference for tools/sign_apk.py: bonyback1/sony-pmca-ricoh-mod
+https://github.com/bonyback1/sony-pmca-ricoh-mod
+Reviewed revision: 7c565898562c73c5073c54dfc831c8c3df9c24cf
+License: Apache License 2.0, reproduced in LICENSES/Apache-2.0.txt.
+Copyright in upstream material remains with its respective contributors.
+tools/sign_apk.py is an adapted upstream file and remains Apache-2.0.
+Modifications: explicit SHA-1 signatures for the tested API 10 runtime and JAR manifest line folding.
+The upstream repository did not contain a separate NOTICE file at the reviewed revision.
+
+Bundled fonts:
+app/assets/fonts/NotoSansSC-UI.ttf and NotoSansTC-UI.ttf are subsets of Noto Sans SC/TC.
+Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'.
+Licensed under the SIL Open Font License, Version 1.1.
+The complete OFL texts are included beside the fonts as OFL-NotoSansSC.txt and OFL-NotoSansTC.txt.
+The subsets were generated from Google Fonts with tools/fetch_fonts.py and contain only ASCII and the UI characters used by Lang.java.
+
+Behavioral and interface references (no source code copied):
+- recipe-lab-sony-pmca (GPL-3.0), local reference checkout: the Activity + SurfaceView + Canvas structure,
+  Camera.Parameters keys and Sony scan codes known to work on the NEX-6.
+- sony-lut-camera (GPL-3.0), local reference checkout: the static firmware audit showing that the NEX-6
+  lacks CameraEx RGB-matrix and extended-gamma APIs.
+- sony-nex6-app-menu-unlock: the separate procedure that restores the NEX-6 app-menu entry.
+These projects' licenses do not cover this repository, and none of their source is included here.
+
+No Sony firmware, Sony base-application code, official Fujifilm LUT file, Fujifilm-fitted parameter table,
+Ricoh matrix/gamma array, camera signing key or unlock device data is included in this repository.
+The app uses only public Android APIs and reflection against classes already present on the camera.
+
+Sony, PlayMemories Camera Apps, NEX-6, FUJIFILM, Ricoh and the film/style names
+are used to identify compatibility or references. All trademarks belong to their respective owners.
+This project is not affiliated with, endorsed by, or certified by those companies.
+The software is experimental and is provided without any compatibility, color-accuracy or fitness warranty.

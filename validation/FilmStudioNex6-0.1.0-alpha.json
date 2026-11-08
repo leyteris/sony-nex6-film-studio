@@ -1,0 +1,30 @@
+{
+  "file": "FilmStudioNex6-0.1.0-alpha.apk",
+  "package": "com.filmstudio.nex6",
+  "version": "0.1.0-alpha",
+  "version_code": 1,
+  "sha256": "4cc9a6f6c67874225807bd814a48a7eb5d1cab7e71ec0426a3d6fee0d4f00a28",
+  "size_bytes": 22057,
+  "min_sdk": 10,
+  "label": "Film Studio NEX-6",
+  "dex_version": "035",
+  "architecture": "dex only, no native code",
+  "signature": "v1 JAR (SHA-1, RSA, openssl smime -noattr -binary)",
+  "signing_key": "local debug key (.private/signing.pem, not distributed)",
+  "target": "Sony NEX-6 (first-generation PMCA, Android 2.3.7 / API 10)",
+  "camera_tested": false,
+  "cameras_tested": [],
+  "install_note": "New package name, so it installs beside the a5100 Film Studio build. If the camera still returns to the native UI, copy /sdcard/FSLOG.TXT back for diagnosis.",
+  "limitations": [
+    "looks are live camera parameters (color mode, saturation, contrast, sharpness, WB, DRO), not the 3D LUT engine",
+    "settings are applied only while the app is open and restored on exit",
+    "center button or shutter saves the JPEG through the native camera; FSLOG reports whether a new DCIM file appeared"
+  ],
+  "looks": 15,
+  "strengths": [
+    30,
+    50,
+    70,
+    100
+  ]
+}

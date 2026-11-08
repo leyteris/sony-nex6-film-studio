@@ -1,0 +1,230 @@
+# 开发与构建
+
+本文说明如何从源码构建、验证、签名和测试 Film Studio NEX-6。当前目标版本为 `0.2.12-alpha`，源码在 `app/`，构建入口是 `tools/build.py`。
+
+> 实机验证状态见 [VALIDATION.md](VALIDATION.md)。在真实 NEX-6 上运行并取回日志之前，`camera_tested` 必须保持 `false`。
+
+## 1. 环境
+
+| 组件 | 版本 / 路径 |
+| --- | --- |
+| Python | 3.10+（只用标准库） |
+| JDK | 17；脚本优先使用 `inputs/amazon-corretto-17.jdk/Contents/Home`，其次 `JAVA_HOME`，最后 `PATH` |
+| Android SDK | build-tools `36.0.0`；platform `android-37.0` |
+| 签名 | OpenSSL + `.private/signing.pem` |
+| 字体（可选） | `fonttools` |
+
+默认 SDK 路径：
+
+```text
+$HOME/Library/Android/sdk
+```
+
+不是这个路径时，修改 `tools/build.py` 顶部的 `SDK`、`BUILD_TOOLS`、`ANDROID_JAR`。
+
+准备 JDK（示例，按实际下载包调整）：
+
+```text
+inputs/amazon-corretto-17.jdk/
+```
+
+`inputs/`、`output/`、`build-local/`、`.private/` 都被 `.gitignore` 忽略。
+
+## 2. 构建
+
+在仓库根目录：
+
+```sh
+python3 tools/build.py
+```
+
+脚本依次执行：
+
+1. `aapt2 compile` 编译 `app/res/`；
+2. `aapt2 link` 生成 `build-local/app/unsigned.apk`，写入 Manifest，打包 `app/assets/`，并加 `--no-compile-sdk-metadata`；
+3. `javac -source 8 -target 8` 编译 `app/src/`；
+4. `d8 --min-api 10` 生成 `classes.dex`；
+5. 把 `classes.dex` 加入未签名 APK；
+6. `tools/sign_apk.py` 生成 v1 JAR 签名（OpenSSL `smime -noattr -binary`，SHA-1）；
+7. 用 `aapt dump badging`、`apksigner verify --min-sdk-version 10` 检查；
+8. 写入 `validation/FilmStudioNex6-0.2.12-alpha.json`。
+
+产物：
+
+```text
+output/FilmStudioNex6-0.2.12-alpha.apk
+validation/FilmStudioNex6-0.2.12-alpha.json
+```
+
+构建结束会打印包名、版本、dex 版本、SHA-256 和大小。验证记录里的 `camera_tested` 固定为 `false`，只有实机证据才能修改。
+
+## 3. 签名
+
+- 正式覆盖安装必须使用同一份 `.private/signing.pem`；
+- 该文件权限应为 `600`，离线备份，绝不提交或上传；
+- 缺失时脚本会用一次性调试密钥签名，打印 `WARNING`；产物可以安装，但不能覆盖已发布版本；
+- 旧相机只接受 v1 JAR 签名；`tools/sign_apk.py` 已针对 API 10 显式使用 SHA-1 和 JAR 清单折行；
+- 签名文件本身属于敏感材料，不属于 PolyForm 授权内容。
+
+检查证书：
+
+```sh
+JAVA_HOME="$PWD/inputs/amazon-corretto-17.jdk/Contents/Home" \
+  "$HOME/Library/Android/sdk/build-tools/36.0.0/apksigner" \
+  verify --min-sdk-version 10 --print-certs \
+  output/FilmStudioNex6-0.2.12-alpha.apk
+```
+
+## 4. API 10 编译门
+
+NEX-6 运行 Android 2.3.7 / API 10。仅设置 `minSdkVersion=10` 不能发现源码里误用的高版本 API；需要用 Android 2.3.3 的公开 stub 重新编译全部源码。
+
+下载 stub（只需一次）：
+
+```sh
+curl -L -o /tmp/android-2.3.3.jar \
+  https://repo1.maven.org/maven2/com/google/android/android/2.3.3/android-2.3.3.jar
+```
+
+编译：
+
+```sh
+rm -rf /tmp/nex6-api10-classes
+mkdir -p /tmp/nex6-api10-classes
+inputs/amazon-corretto-17.jdk/Contents/Home/bin/javac \
+  -source 8 -target 8 \
+  -bootclasspath "/tmp/android-2.3.3.jar:$HOME/Library/Android/sdk/platforms/android-37.0/android.jar" \
+  -encoding UTF-8 \
+  -d /tmp/nex6-api10-classes \
+  $(find app/src -name '*.java')
+```
+
+- 必须同时把 `android-37.0/android.jar` 放在 bootclasspath 后面，否则 `java.lang` 等核心类无法解析；
+- stub 在前，所以任何高于 API 10 的 `android.*` 类型或方法都会在这里失败；
+- 通过时 `0.2.12` 生成 21 个 class。
+
+再检查最终 dex 的 `android.*` 类型都能在 stub 中找到：
+
+```sh
+rm -rf /tmp/nex6-dexcheck && mkdir -p /tmp/nex6-dexcheck
+unzip -p output/FilmStudioNex6-0.2.12-alpha.apk classes.dex > /tmp/nex6-dexcheck/classes.dex
+"$HOME/Library/Android/sdk/build-tools/36.0.0/dexdump" -d /tmp/nex6-dexcheck/classes.dex > /tmp/nex6-dexcheck/dump.txt
+python3 - <<'PY'
+import re, zipfile
+text = open('/tmp/nex6-dexcheck/dump.txt', encoding='utf-8', errors='replace').read()
+refs = sorted(set(re.findall(r'Landroid/[A-Za-z0-9_/$]+;', text)))
+jar = zipfile.ZipFile('/tmp/android-2.3.3.jar')
+have = set('L' + n[:-6] + ';' for n in jar.namelist() if n.endswith('.class'))
+missing = [r for r in refs if r not in have]
+print('android refs:', len(refs), 'missing:', len(missing))
+for r in missing:
+    print('MISSING', r)
+PY
+```
+
+`0.2.12` 的结果是 35 个 `android.*` 类型、0 个缺失。`tools/api10_public_ids.txt` 是另一份资源 ID 清单（AOSP android-2.3.7_r1 `public.xml`），用于检查资源层是否引用框架私有 ID；当前资源表只有 `ic_launcher` 和 `app_name`。
+
+## 5. 字体
+
+界面汉字由两份 Noto Sans 子集绘制。修改 `Lang.java` 的界面文本后，要同步更新 `tools/fetch_fonts.py` 里的 `SC_TEXT` / `TC_TEXT`，再运行：
+
+```sh
+python3 -m pip install fonttools
+python3 tools/fetch_fonts.py
+```
+
+脚本从 Google Fonts 的 `text=` 接口获取 TTF，并用 fontTools 校验每个字符都在 cmap 中；同时下载 OFL 许可到 `app/assets/fonts/`。产物已提交，正常构建不需要网络。
+
+## 6. 模拟器测试
+
+模拟器只能验证安装、生命周期、界面和按键路径，不能替代 NEX-6 实机验证。
+
+1. 启动 Android 37 模拟器；
+2. 设为 NEX-6 的屏幕尺寸：
+
+```sh
+adb shell wm size 640x480
+adb shell wm density 160
+```
+
+3. 安装并启动：
+
+```sh
+adb install -r output/FilmStudioNex6-0.2.12-alpha.apk
+adb shell am start -n com.filmstudio.nex6/.MainActivity
+```
+
+4. 常用按键：
+
+| 操作 | 命令 |
+| --- | --- |
+| 左 / 右 | `adb shell input keyevent 21` / `22` |
+| 上 / 下 | `adb shell input keyevent 19` / `20` |
+| 中央键 | `adb shell input keyevent 23` |
+| DELETE | `adb shell input keyevent 67` |
+| MENU | `adb shell input keyevent 82` |
+| BACK | `adb shell input keyevent 4` |
+| 半按 S1（保持 3 秒） | `adb shell input keyevent --duration 3000 80` |
+
+5. 截图与日志：
+
+```sh
+adb exec-out screencap -p > /tmp/nex6.png
+adb shell cat /sdcard/FSNEX6/FSLOG.TXT
+```
+
+语言测试可在系统设置中为应用单独选择语言（Android 13+），或在模拟器中切换系统语言后重启应用。日志的 `START` 行会记录 `ui=zh-CN` / `ui=zh-TW` / `ui=en`。
+
+模拟器的已知差异：
+
+- 没有 `CameraEx`，应用回退到 `android.hardware.Camera`；
+- 假相机没有 `color-mode` 和 `rgb-matrix-mode`，某些色温参数会被拒绝，应用到核心参数并记录 `DROPPED`；
+- 假相机总是返回合焦，红色对焦失败路径不会被触发；
+- `takePicture(null,null,null)` 不产生 `DCIM` 文件，`SAVED` 只能是 `no new JPEG`；
+- 不能验证 NEX-6 的扫描码、落卡时序、预览比例和退出恢复。
+
+## 7. 版本与验证记录
+
+发布新版本时：
+
+1. 修改 `app/AndroidManifest.xml` 的 `versionCode` 和 `versionName`；
+2. 修改 `tools/build.py` 的 `OUTPUT` 和 `VALIDATION` 文件名；
+3. 构建并运行第 4 节的 API 10 门禁；
+4. 更新 `README.md` / `README.en.md` 的版本、SHA-256 和 `docs/INSTALL.*` 的校验值；
+5. 在 `CHANGELOG.md` 增加条目；
+6. 在 `docs/VALIDATION.md` 记录静态结果和模拟器证据，保持 `camera_tested=false`，直到取得实机证据；
+7. 确认 `validation/*.json` 被 Git 跟踪，APK 不被跟踪。
+
+`validation/` 下的 JSON 由构建脚本生成，包含包名、版本、SHA-256、大小、签名方式、限制和 `camera_tested`。不要手工伪造实机结果。
+
+## 8. 发布
+
+建议把 APK 作为 Release 附件，而不是提交进 Git：
+
+```sh
+shasum -a 256 output/FilmStudioNex6-<version>.apk > SHA256SUMS.txt
+gh release create v<version> output/FilmStudioNex6-<version>.apk SHA256SUMS.txt \
+  --title "Film Studio NEX-6 <version>" \
+  --notes "See docs/VALIDATION.md for the current validation status."
+```
+
+发布前检查：
+
+- 不包含 `.private/`、`.env`、`inputs/`、`build-local/`、APK 以外的私钥或日志；
+- 不包含 Sony 固件、Sony 基础应用、富士官方 LUT 或理光矩阵数据；
+- `README`、`NOTICE`、`LICENSING.md` 的措辞与当前验证状态一致；
+- `camera_tested` 仍为 `false` 时，不使用“已验证”“可用”“兼容”等表述。
+
+## 9. 目录约定
+
+```text
+app/                应用源码、Manifest、资源、字体
+build-local/        中间产物（忽略）
+docs/               文档
+inputs/             本地 JDK、第三方输入（忽略）
+output/             签名 APK（忽略）
+tools/              构建、字体、签名、API 10 清单
+validation/         版本元数据（跟踪）
+.private/           签名私钥（忽略，绝不提交）
+legacy/             a5100 旧项目资料（本地保留，忽略）
+```
