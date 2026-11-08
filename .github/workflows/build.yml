@@ -25,11 +25,13 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The legacy "tools" package in this action's default list was
+          # removed from the SDK repository; install only what we need below.
+          packages: ''
 
       - name: Install platform and build tools
-        run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager --install "platforms;android-37.0" "build-tools;36.0.0"
+        run: sdkmanager --install "platforms;android-37.0" "build-tools;36.0.0"
 
       - name: API 10 compile gate
         run: |
