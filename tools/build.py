@@ -22,9 +22,19 @@ SRC = ROOT / 'app'
 BUILD = ROOT / 'build-local/app'
 OUTPUT = ROOT / 'output/FilmStudioNex6-0.2.12-alpha.apk'
 VALIDATION = ROOT / 'validation/FilmStudioNex6-0.2.12-alpha.json'
-SDK = Path.home() / 'Library/Android/sdk'
-BUILD_TOOLS = SDK / 'build-tools/36.0.0'
-ANDROID_JAR = SDK / 'platforms/android-37.0/android.jar'
+
+
+def sdk_root():
+    for name in ('ANDROID_SDK_ROOT', 'ANDROID_HOME'):
+        value = os.environ.get(name)
+        if value:
+            return Path(value)
+    return Path.home() / 'Library/Android/sdk'
+
+
+SDK = sdk_root()
+BUILD_TOOLS = Path(os.environ.get('ANDROID_BUILD_TOOLS', SDK / 'build-tools/36.0.0'))
+ANDROID_JAR = Path(os.environ.get('ANDROID_JAR', SDK / 'platforms/android-37.0/android.jar'))
 KEY = ROOT / '.private/signing.pem'
 
 sys.path.insert(0, str(ROOT / 'tools'))
@@ -121,7 +131,8 @@ def main():
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     if OUTPUT.exists():
         OUTPUT.unlink()
-    if KEY.exists():
+    local_key = KEY.exists()
+    if local_key:
         sign_apk(str(unsigned), str(OUTPUT), str(KEY))
     else:
         print('WARNING: %s missing, signing with a throwaway debug key' % KEY)
@@ -167,7 +178,11 @@ def main():
         'dex_version': dex_version,
         'architecture': 'dex only, no native code',
         'signature': 'v1 JAR (SHA-1, RSA, openssl smime -noattr -binary)',
-        'signing_key': 'local debug key (.private/signing.pem, not distributed)',
+        'signing_key': (
+            'local key (.private/signing.pem, not distributed)'
+            if local_key else
+            'throwaway debug key generated for this build (not distributed)'
+        ),
         'target': 'Sony NEX-6 (first-generation PMCA, firmware 1.03, Android 2.3.7 / API 10)',
         'camera_tested': False,
         'cameras_tested': [],
