@@ -25,6 +25,16 @@ A standalone, unofficial film-look app for the **Sony NEX-6**. It expresses the 
 - The last look and strength are restored on the next launch.
 - Card log at `/sdcard/FSNEX6/FSLOG.TXT`, with no IP address or serial number.
 
+## Screenshots
+
+> These are Android 37 emulator captures that show the layout, **not NEX-6 hardware**. The emulator has no Sony CameraEx and no real scene, so color, framing and AF position will differ on the camera.
+
+| Full panel | Pill stage | Hidden view · S1 focus lock |
+| --- | --- | --- |
+| <img src="docs/images/ui-full.png" width="250" alt="Full panel"> | <img src="docs/images/ui-pill.png" width="250" alt="Pill stage"> | <img src="docs/images/focus-frame.png" width="250" alt="Hidden view with S1 focus frame"> |
+
+The captures show the Simplified Chinese UI; English and Traditional Chinese use the same layout with different strings and fonts.
+
 ## Compatibility
 
 | Model / firmware | Status |
@@ -126,6 +136,8 @@ python3 tools/build.py
 
 The APK is written to `output/FilmStudioNex6-0.2.12-alpha.apk` and a metadata file to `validation/FilmStudioNex6-0.2.12-alpha.json`. Signing uses the local `.private/signing.pem`, which is never committed or uploaded. If it is missing, the script signs with a throwaway debug key; that signature differs and cannot update an installed release in place.
 
+GitHub Actions ([.github/workflows/build.yml](.github/workflows/build.yml)) runs the API-10 compile gate and builds the APK on every push and pull request, then uploads it as a workflow artifact. CI has no signing key, so that artifact is debug-signed and is meant for testing only; it cannot update an installed local or release build.
+
 To regenerate the Chinese font subsets (optional; needs network and `fonttools`):
 
 ```sh
@@ -141,7 +153,8 @@ Full build, API-10 gate, emulator test and release notes are in [DEVELOPMENT.md]
 app/            Java sources, manifest, resources and bundled fonts
 docs/           Installation, architecture, development, compatibility, validation, sources
 tools/          Build, font generation and API-10 signer
-validation/     Per-version build metadata and SHA-256 (camera_tested=false)
+validation/     Current build metadata and SHA-256 (camera_tested=false)
+.github/        GitHub Actions build workflow
 output/         Local build artifacts (git-ignored)
 inputs/         Local toolchain and third-party inputs (git-ignored)
 .private/       Signing key (git-ignored, never commit)

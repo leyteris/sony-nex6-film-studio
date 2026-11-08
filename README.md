@@ -25,6 +25,16 @@
 - 上次使用的风格和强度会在下次启动时恢复。
 - 卡上日志 `/sdcard/FSNEX6/FSLOG.TXT`，不含 IP 地址或序列号。
 
+## 界面预览
+
+> 以下均为 Android 37 模拟器截图，用于说明布局，**不是 NEX-6 实机画面**。模拟器没有 Sony CameraEx 和真实取景，实机的色彩、比例与对焦位置可能不同。
+
+| 完整面板 | 胶囊阶段 | 隐藏阶段 · S1 合焦 |
+| --- | --- | --- |
+| <img src="docs/images/ui-full.png" width="250" alt="完整面板"> | <img src="docs/images/ui-pill.png" width="250" alt="胶囊阶段"> | <img src="docs/images/focus-frame.png" width="250" alt="隐藏阶段与 S1 对焦框"> |
+
+模拟器使用简体中文界面；繁体中文与英文界面布局相同，只替换文案和字体。
+
 ## 机型兼容性
 
 | 机型 / 固件 | 本项目状态 |
@@ -126,6 +136,8 @@ python3 tools/build.py
 
 产物写入 `output/FilmStudioNex6-0.2.12-alpha.apk`，同时生成 `validation/FilmStudioNex6-0.2.12-alpha.json`。签名默认使用本地 `.private/signing.pem`；该文件不提交、不上传。缺失时脚本会用一次性调试密钥签名，签名不同，不能覆盖安装已发布版本。
 
+GitHub Actions（[.github/workflows/build.yml](.github/workflows/build.yml)）会在 push 和 PR 时执行 API 10 编译门并构建 APK，产物作为 workflow artifact 下载。CI 不持有签名私钥，因此 artifact 是调试签名，只用于测试，不能覆盖安装本地构建或正式版本。
+
 重新生成简/繁字体子集（可选，需要网络与 `fonttools`）：
 
 ```sh
@@ -141,7 +153,8 @@ python3 tools/fetch_fonts.py
 app/            应用源码、Manifest、资源与内置字体
 docs/           安装、架构、开发、兼容性、验证与来源说明
 tools/          构建、字体生成、API 10 签名工具
-validation/     每个版本的构建元数据与 SHA-256（camera_tested=false）
+validation/     当前版本的构建元数据与 SHA-256（camera_tested=false）
+.github/        GitHub Actions 构建工作流
 output/         本地构建产物（Git 忽略）
 inputs/         本地工具链与第三方输入（Git 忽略）
 .private/       签名私钥（Git 忽略，绝不提交）
