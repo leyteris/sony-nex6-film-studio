@@ -200,7 +200,7 @@ END app
 | 0.2.11-alpha | 13 | 72,030 | `4b3273c577b7` | 卡片上下间距对称 |
 | **0.2.12-alpha** | **14** | **73,408** | **`51889474607a`** | **S1 半按对焦框；目录重组后重建** |
 
-每个版本的完整元数据在 `validation/FilmStudioNex6-*.json`，均记录 `camera_tested=false`。
+当前版本的完整元数据在 `validation/FilmStudioNex6-0.2.12-alpha.json`，记录 `camera_tested=false`。历史版本只保留上表摘要，完整旧 JSON 存放在本地 `legacy/validation-history/`，不随仓库发布。
 
 早期“给 a5100 APK 打补丁”的 NEX-6 路线（0.3.x-alpha-nex6）不属于本仓库，源码和验证资料保存在本地 `legacy/a5100/`，不随新仓库发布。
 

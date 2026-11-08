@@ -193,9 +193,9 @@ adb shell cat /sdcard/FSNEX6/FSLOG.TXT
 4. 更新 `README.md` / `README.en.md` 的版本、SHA-256 和 `docs/INSTALL.*` 的校验值；
 5. 在 `CHANGELOG.md` 增加条目；
 6. 在 `docs/VALIDATION.md` 记录静态结果和模拟器证据，保持 `camera_tested=false`，直到取得实机证据；
-7. 确认 `validation/*.json` 被 Git 跟踪，APK 不被跟踪。
+7. 确认当前版本的 `validation/FilmStudioNex6-<version>.json` 被 Git 跟踪，APK 不被跟踪；旧版本的 JSON 不提交。
 
-`validation/` 下的 JSON 由构建脚本生成，包含包名、版本、SHA-256、大小、签名方式、限制和 `camera_tested`。不要手工伪造实机结果。
+`validation/` 只保留当前发布候选的 JSON，由构建脚本生成，包含包名、版本、SHA-256、大小、签名方式、限制和 `camera_tested`。历史版本的摘要保留在 `docs/VALIDATION.md`，完整旧文件存放在本地 `legacy/validation-history/`。不要手工伪造实机结果。
 
 ## 8. 发布
 
@@ -219,12 +219,26 @@ gh release create v<version> output/FilmStudioNex6-<version>.apk SHA256SUMS.txt 
 
 ```text
 app/                应用源码、Manifest、资源、字体
+.github/            GitHub Actions 构建工作流
 build-local/        中间产物（忽略）
 docs/               文档
 inputs/             本地 JDK、第三方输入（忽略）
 output/             签名 APK（忽略）
 tools/              构建、字体、签名、API 10 清单
-validation/         版本元数据（跟踪）
+validation/         当前版本元数据（跟踪）
 .private/           签名私钥（忽略，绝不提交）
-legacy/             a5100 旧项目资料（本地保留，忽略）
+legacy/             a5100 旧项目资料与旧验证 JSON（本地保留，忽略）
 ```
+
+## 10. GitHub Actions
+
+`.github/workflows/build.yml` 在 push 到 `main`、pull request 和手动触发时构建 APK：
+
+1. 安装 JDK 17、`platforms;android-37.0` 和 `build-tools;36.0.0`；
+2. 下载 Android 2.3.3 stub 并执行第 4 节的 API 10 编译门；
+3. 执行 `python3 tools/build.py`；
+4. 上传 APK、`SHA256SUMS.txt` 和当前 `validation/*.json` 作为 workflow artifact。
+
+CI 不持有 `.private/signing.pem`，因此 APK 由构建脚本生成的一次性调试密钥签名。该产物适合在模拟器或测试机上验证构建流程，**不能覆盖安装**本地同版本或正式签名的 APK。
+
+`tools/build.py` 通过 `ANDROID_SDK_ROOT` / `ANDROID_HOME` 查找 SDK，也接受 `ANDROID_BUILD_TOOLS` 和 `ANDROID_JAR` 覆盖；本地 macOS 默认仍使用 `~/Library/Android/sdk`。

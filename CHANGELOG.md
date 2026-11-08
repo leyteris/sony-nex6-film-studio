@@ -5,6 +5,10 @@
 - 目录改为 NEX-6 单一项目：`app/`、`docs/`、`tools/`、`validation/`；
 - 新增中文/英文 README、安装、架构、开发、兼容性、验证与来源文档；
 - README 与来源文档增加对前身项目 [ukiki0718-netizen/sony-a5100-film-studio](https://github.com/ukiki0718-netizen/sony-a5100-film-studio) 的致谢；
+- README 增加三张 Android 37 模拟器界面截图（完整面板、胶囊阶段、隐藏阶段对焦框），并注明非实机画面；
+- `validation/` 只保留当前版本元数据，历史 JSON 移到本地 `legacy/validation-history/`；
+- 新增 GitHub Actions 工作流：push/PR 时执行 API 10 编译门并构建调试签名 APK artifact；
+- `.gitignore` 补充编辑器、SD 卡元数据和本地配置规则；
 - a5100 旧项目资料移到本地 `legacy/a5100/`，不进入新仓库；
 - 应用源码与功能未变。`0.2.12-alpha` 重新构建为 `51889474…e349`（与原 `b7fe23f7…ace3` 源码相同，差异仅来自时间戳）；
 - 重新执行 API 10 编译门、dex 类型审计和模拟器冒烟测试。
