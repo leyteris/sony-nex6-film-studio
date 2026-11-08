@@ -1,33 +1,64 @@
-# Third-party inputs, generated camera binaries, LUTs and local calibration data
+# Local build outputs and third-party inputs
 inputs/*
 !inputs/.gitkeep
 output/*
 !output/.gitkeep
-profiles/
 build-local/
 .private/
 .venv/
+profiles/
+
+# Python
 __pycache__/
 *.pyc
+
+# Camera binaries, generated artifacts and sensitive material
 *.apk
+*.aab
 *.dex
 *.jar
+*.zip
 *.cube
 *.CUB
-*.zip
 *.pem
 *.key
 *.jks
+*.keystore
 *.p12
 *.log
+
+# Captured photos, video, camera logs and emulator captures
 *.JPG
 *.jpg
+*.jpeg
+*.ARW
 *.MP4
 *.mp4
 *.MTS
+FSLOG.TXT
+FSNEX6/
+DCIM/
+captures/
+
+# Local configuration and editor state
 .env
 .env.*
+local.properties
+.gradle/
+.idea/
+*.iml
+.vscode/
+*.swp
+*~
+Thumbs.db
+Desktop.ini
+
+# macOS and mounted SD-card metadata
 .DS_Store
+._*
+.fseventsd/
+.Spotlight-V100/
+.Trashes/
 
 # a5100 predecessor material kept locally for reference, not part of this repo
 legacy/
