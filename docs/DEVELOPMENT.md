@@ -200,20 +200,14 @@ adb pull /sdcard/FSNEX6/REPORT.TXT
 4. 更新 `README.md` / `README.en.md` 的版本、SHA-256 和 `docs/INSTALL.*` 的校验值；
 5. 在 `CHANGELOG.md` 增加条目；
 6. 在 `docs/VALIDATION.md` 记录静态结果和模拟器证据，保持 `camera_tested=false`，直到取得实机证据；
-7. 确认当前版本的 `validation/FilmStudioNex6-<version>.json` 被 Git 跟踪，APK 不被跟踪；旧版本的 JSON 不提交。
+7. 确认当前版本的 `validation/FilmStudioNex6-<version>.json` 被 Git 跟踪，APK 不被跟踪；旧版本的 JSON 不提交；
+8. 推送 `main` 和与版本对应的 tag（如 `0.2.16`），确认 tag 触发的 workflow 通过并生成预发布 Release。
 
 `validation/` 只保留当前发布候选的 JSON，由构建脚本生成，包含包名、版本、SHA-256、大小、签名方式、限制和 `camera_tested`。历史版本的摘要保留在 `docs/VALIDATION.md`，完整旧文件存放在本地 `legacy/validation-history/`。不要手工伪造实机结果。
 
 ## 8. 发布
 
-建议把 APK 作为 Release 附件，而不是提交进 Git：
-
-```sh
-shasum -a 256 output/FilmStudioNex6-<version>.apk > SHA256SUMS.txt
-gh release create v<version> output/FilmStudioNex6-<version>.apk SHA256SUMS.txt \
-  --title "Film Studio NEX-6 <version>" \
-  --notes "See docs/VALIDATION.md for the current validation status."
-```
+推送 tag（例如 `0.2.16`，不必带 `v`）会触发 `.github/workflows/build.yml` 的 `release` job：构建、签名，并创建带 APK、`SHA256SUMS.txt` 和 `validation/FilmStudioNex6-<version>.json` 的预发布 Release。CI 不持有 `.private/signing.pem`，因此 Release APK 由一次性调试密钥签名，SHA-256 与本地构建不同，也不能覆盖安装本地同版本；需要与文档校验值一致的 APK 时使用 `output/` 下的本地构建。
 
 发布前检查：
 
@@ -239,13 +233,15 @@ legacy/             a5100 旧项目资料与旧验证 JSON（本地保留，忽�
 
 ## 10. GitHub Actions
 
-`.github/workflows/build.yml` 在 push 到 `main`、pull request 和手动触发时构建 APK：
+`.github/workflows/build.yml` 在 push 到 `main`、pull request、手动触发和推送任意 tag 时构建 APK：
 
 1. 安装 JDK 17、`platforms;android-37.0` 和 `build-tools;36.0.0`；
 2. 下载 Android 2.3.3 stub 并执行第 4 节的 API 10 编译门；
 3. 执行 `python3 tools/build.py`；
-4. 上传 APK、`SHA256SUMS.txt` 和当前 `validation/*.json` 作为 workflow artifact。
+4. 把 APK、`SHA256SUMS.txt` 和当前 `validation/*.json` 暂存到 `dist/`，上传为 workflow artifact。
 
-CI 不持有 `.private/signing.pem`，因此 APK 由构建脚本生成的一次性调试密钥签名。该产物适合在模拟器或测试机上验证构建流程，**不能覆盖安装**本地同版本或正式签名的 APK。
+tag 触发时另有 `release` job：下载 artifact，并用 `gh release create --verify-tag --prerelease` 创建预发布 Release，附上同样三个文件。tag 名不必带 `v`。
+
+CI 不持有 `.private/signing.pem`，因此 APK 由构建脚本生成的一次性调试密钥签名。该产物适合在模拟器或测试机上验证构建流程，**不能覆盖安装**本地同版本或正式签名的 APK；其 SHA-256 也不等于文档中本地构建的值。
 
 `tools/build.py` 通过 `ANDROID_SDK_ROOT` / `ANDROID_HOME` 查找 SDK，也接受 `ANDROID_BUILD_TOOLS` 和 `ANDROID_JAR` 覆盖；本地 macOS 默认仍使用 `~/Library/Android/sdk`。

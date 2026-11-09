@@ -20,13 +20,15 @@ The installer adds an ordinary PMCA app. It does not write firmware, camera sett
 
 ## 1. Download and verify
 
-Download `FilmStudioNex6-0.2.16-alpha.apk` from Releases, or use the local build at `output/FilmStudioNex6-0.2.16-alpha.apk`.
+Download `FilmStudioNex6-0.2.16-alpha.apk` from Releases (built by CI on tag `0.2.16`), or use the local build at `output/FilmStudioNex6-0.2.16-alpha.apk`.
 
-SHA-256 of the current build:
+SHA-256 of the local build:
 
 ```text
 5cc4e4da07772b87de8a177f3c76fe567cdd2d328c1b2e635fd728bf69013001
 ```
+
+> The release APK is CI-signed with a throwaway debug key, so its SHA-256 differs from the local build above. Verify it against the `SHA256SUMS.txt` attached to the release. The two signatures cannot update each other in place; use the local build when you need the checksum documented here.
 
 macOS / Linux:
 

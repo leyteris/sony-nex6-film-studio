@@ -91,7 +91,7 @@ Prerequisites:
 2. Wi-Fi ADB is enabled on the camera (Sony-PMCA-RE / OpenMemories: Tweak).
 3. Android Platform-Tools are installed on the computer.
 
-Download `FilmStudioNex6-0.2.16-alpha.apk` from the Releases page (once published), or use the local build at `output/FilmStudioNex6-0.2.16-alpha.apk`, then run:
+Download `FilmStudioNex6-0.2.16-alpha.apk` from the Releases page (built by CI on tag `0.2.16`), or use the local build at `output/FilmStudioNex6-0.2.16-alpha.apk`, then run:
 
 ```sh
 adb connect CAMERA_IP:5555
@@ -105,6 +105,8 @@ SHA-256 of the current build:
 ```text
 5cc4e4da07772b87de8a177f3c76fe567cdd2d328c1b2e635fd728bf69013001
 ```
+
+This SHA-256 belongs to the locally signed `output/` build. The CI release APK is signed with a throwaway debug key: its signature and checksum differ, so use the `SHA256SUMS.txt` attached to that release. The two cannot update each other in place.
 
 See the **[English installation guide](docs/INSTALL.en.md)** for the full procedure, first-run checks, log retrieval and troubleshooting.
 
@@ -145,7 +147,7 @@ python3 tools/build.py
 
 The APK is written to `output/FilmStudioNex6-0.2.16-alpha.apk` and a metadata file to `validation/FilmStudioNex6-0.2.16-alpha.json`. Signing uses the local `.private/signing.pem`, which is never committed or uploaded. If it is missing, the script signs with a throwaway debug key; that signature differs and cannot update an installed release in place.
 
-GitHub Actions ([.github/workflows/build.yml](.github/workflows/build.yml)) runs the API-10 compile gate and builds the APK on every push and pull request, then uploads it as a workflow artifact. CI has no signing key, so that artifact is debug-signed and is meant for testing only; it cannot update an installed local or release build.
+GitHub Actions ([.github/workflows/build.yml](.github/workflows/build.yml)) runs the API-10 compile gate and builds the APK on every push and pull request, then uploads it as a workflow artifact. Pushing any tag (for example `0.2.16`) also creates a pre-release containing the APK, `SHA256SUMS.txt` and the validation JSON. CI has no signing key, so both the artifact and the release APK are debug-signed and are meant for testing only; they cannot update an installed local or release build.
 
 To regenerate the Chinese font subsets (optional; needs network and `fonttools`):
 

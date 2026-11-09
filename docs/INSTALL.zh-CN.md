@@ -20,13 +20,15 @@
 
 ## 1. 下载与校验
 
-从 Releases 页面下载 `FilmStudioNex6-0.2.16-alpha.apk`，或使用本地构建产物 `output/FilmStudioNex6-0.2.16-alpha.apk`。
+从 Releases 页面下载 `FilmStudioNex6-0.2.16-alpha.apk`（tag `0.2.16` 触发的 CI 构建），或使用本地构建产物 `output/FilmStudioNex6-0.2.16-alpha.apk`。
 
-当前构建的 SHA-256：
+当前本地构建的 SHA-256：
 
 ```text
 5cc4e4da07772b87de8a177f3c76fe567cdd2d328c1b2e635fd728bf69013001
 ```
+
+> Release 中的 APK 由 CI 用一次性调试密钥签名，SHA-256 与上面的本地构建不同，校验时请使用该 Release 附带的 `SHA256SUMS.txt`。两种签名不能互相覆盖安装；需要与文档校验值一致时使用本地构建。
 
 macOS / Linux：
 

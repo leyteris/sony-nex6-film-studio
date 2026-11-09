@@ -91,7 +91,7 @@ PMCA（PlayMemories Camera Apps）是安装本应用所需的机内平台。安�
 2. 相机已启用 Wi-Fi ADB（Sony-PMCA-RE / OpenMemories: Tweak）；
 3. 电脑已安装 Android Platform-Tools。
 
-在 Releases 页面下载 `FilmStudioNex6-0.2.16-alpha.apk`（发布后），或使用本地构建产物 `output/FilmStudioNex6-0.2.16-alpha.apk`，然后：
+在 Releases 页面下载 `FilmStudioNex6-0.2.16-alpha.apk`（由 tag `0.2.16` 触发 CI 构建），或使用本地构建产物 `output/FilmStudioNex6-0.2.16-alpha.apk`，然后：
 
 ```sh
 adb connect CAMERA_IP:5555
@@ -105,6 +105,8 @@ adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.16-alpha.apk
 ```text
 5cc4e4da07772b87de8a177f3c76fe567cdd2d328c1b2e635fd728bf69013001
 ```
+
+该 SHA-256 对应本地 `.private/signing.pem` 签名的 `output/` 构建。CI 生成的 Release APK 使用一次性调试密钥，签名和校验值都不同，请以 Release 附带的 `SHA256SUMS.txt` 为准；两者不能互相覆盖安装。
 
 完整步骤、首次检查项、日志取回和故障排查见 **[中文安装教程](docs/INSTALL.zh-CN.md)**。
 
@@ -145,7 +147,7 @@ python3 tools/build.py
 
 产物写入 `output/FilmStudioNex6-0.2.16-alpha.apk`，同时生成 `validation/FilmStudioNex6-0.2.16-alpha.json`。签名默认使用本地 `.private/signing.pem`；该文件不提交、不上传。缺失时脚本会用一次性调试密钥签名，签名不同，不能覆盖安装已发布版本。
 
-GitHub Actions（[.github/workflows/build.yml](.github/workflows/build.yml)）会在 push 和 PR 时执行 API 10 编译门并构建 APK，产物作为 workflow artifact 下载。CI 不持有签名私钥，因此 artifact 是调试签名，只用于测试，不能覆盖安装本地构建或正式版本。
+GitHub Actions（[.github/workflows/build.yml](.github/workflows/build.yml)）会在 push 和 PR 时执行 API 10 编译门并构建 APK，产物作为 workflow artifact 下载；推送任意 tag（如 `0.2.16`）时还会创建带 APK、`SHA256SUMS.txt` 和 validation JSON 的预发布 Release。CI 不持有签名私钥，因此 artifact 和 Release 里的 APK 都是一次性调试签名，只用于测试，不能覆盖安装本地构建或正式版本。
 
 重新生成简/繁字体子集（可选，需要网络与 `fonttools`）：
 
