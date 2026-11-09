@@ -25,6 +25,21 @@ final class Cam {
             "dro-mode", "dro-level", "storage-fmt", "jpeg-quality", "picture-effect"
     };
 
+    /** Runtime names a mono Creative Style may carry across Sony firmwares. */
+    private static final String[] MONO_ALIASES = {
+            "mono", "bw", "blackwhite", "black-white", "monochrome", "monotone"
+    };
+
+    /** Picture Effect spellings of Sony's two monochrome effects. The effect
+     *  drives the image independently of Creative Style, so it is the second
+     *  path to a grayscale frame on a body that drops color-mode=mono. */
+    private static final String[] RICHTONE_ALIASES = {
+            "richtone-mono", "rich-tone-monochrome", "rich-tone-mono", "richtone-monochrome"
+    };
+    private static final String[] ROUGH_ALIASES = {
+            "rough-mono", "high-contrast-mono", "highcontrast-mono", "rough-monochrome", "hc-mono"
+    };
+
     private final Handler handler;
     private SurfaceHolder holder;
     private Object cameraEx;
@@ -35,6 +50,7 @@ final class Cam {
     private boolean sizeLogged;
     private int retry;
     private String lastError = "";
+    private String note = "";
     private Runnable onPreviewStarted;
     private FocusListener focusListener;
     private int focusGeneration;
@@ -67,9 +83,16 @@ final class Cam {
         return lastError;
     }
 
+    /** What the camera actually kept after the last apply, for the on-screen
+     *  corner readout: the SCorner cannot reach the card log reliably. */
+    String lastNote() {
+        return note;
+    }
+
     boolean open() {
         release();
         lastError = "";
+        note = "";
         try {
             Class<?> cx = Class.forName("com.sony.scalar.hardware.CameraEx");
             Class<?> opts = Class.forName("com.sony.scalar.hardware.CameraEx$OpenOptions");
@@ -99,6 +122,7 @@ final class Cam {
         try {
             Camera.Parameters p = camera.getParameters();
             Log8.event("CAP", "color-mode=" + p.get("color-mode-values"));
+            Log8.event("CAP", "picture-effect=" + p.get("picture-effect-values"));
             Log8.event("CAP", "whitebalance=" + p.get("whitebalance-values"));
             Log8.event("CAP", "rgb-matrix-mode=" + p.get("rgb-matrix-mode"));
         } catch (Throwable t) {
@@ -216,6 +240,7 @@ final class Cam {
     boolean apply(Looks.Look look, int strength) {
         if (camera == null) return false;
         lastError = "";
+        note = "";
         Looks.Look scaled = Looks.atStrength(look, strength);
         Map<String, String> wanted = wanted(scaled);
         // Recipe Lab clears the Picture Profile matrix on every body it writes to;
@@ -227,11 +252,10 @@ final class Cam {
             }
         } catch (Throwable ignored) {
         }
-        String style = supportedStyle(scaled.style);
-        if (!style.equals(scaled.style)) {
-            wanted.put("color-mode", style);
-            Log8.event("STYLE", scaled.style + " -> " + style);
-        }
+        String style = resolveStyle(scaled.style);
+        String effect = resolveEffect(scaled.effect);
+        wanted.put("color-mode", style);
+        wanted.put("picture-effect", effect);
         try {
             setAll(wanted);
         } catch (Throwable t) {
@@ -244,8 +268,26 @@ final class Cam {
                 return false;
             }
         }
+        String got = readStyle();
+        String gotFx = readEffect();
+        boolean mono = scaled.effect != null;
+        if (mono && !isMonoToken(got) && !isMonoToken(gotFx)) {
+            // Neither path stuck: Sony accepts setParameters and may still keep
+            // the old values, and a body may spell mono differently. Retry the
+            // style alone and then every spelling, then the effect alone.
+            got = retryMonoStyle(style);
+            gotFx = readEffect();
+            if (!isMonoToken(got) && !isMonoToken(gotFx)) {
+                gotFx = retryMonoEffect(effect);
+            }
+            Log8.event("MONO", "retry cm=" + got + " fx=" + gotFx);
+            if (isMonoToken(got)) wanted.put("color-mode", got);
+            if (isMonoToken(gotFx)) wanted.put("picture-effect", gotFx);
+        }
+        note = mono ? "CM " + got + " FX " + gotFx : "CM " + got;
         verify(wanted);
-        Log8.event("APPLY", scaled.tag + " " + strength + "% " + style);
+        Log8.event("APPLY", scaled.tag + " " + strength + "% " + style + " cm=" + got
+                + (mono ? " fx=" + gotFx : ""));
         return true;
     }
 
@@ -287,7 +329,7 @@ final class Cam {
         p.put("saturation", String.valueOf(l.sat));
         p.put("contrast", String.valueOf(l.con));
         p.put("sharpness", String.valueOf(l.sharp));
-        p.put("picture-effect", "off");
+        p.put("picture-effect", l.effect == null ? "off" : l.effect);
         p.put("storage-fmt", "jpeg");
         p.put("jpeg-quality", "50");
         if ("kelvin".equals(l.wb)) {
@@ -319,19 +361,138 @@ final class Cam {
         return p;
     }
 
-    private String supportedStyle(String want) {
+    /** The wanted style, or the runtime spelling of it when the body advertises
+     *  a different name (mono/bw/monochrome). An unlisted value is still sent:
+     *  Sony ignores an unknown color-mode rather than rejecting the set, and the
+     *  read-back below is what decides the outcome. */
+    private String resolveStyle(String want) {
         try {
             Camera.Parameters p = camera.getParameters();
             String values = p.get("color-mode-values");
             if (values == null) return want;
             String[] list = values.split(",");
-            for (int i = 0; i < list.length; i++) {
-                if (want.equals(list[i].trim())) return want;
+            String[] candidates = "mono".equals(want) ? MONO_ALIASES : new String[] { want };
+            for (int c = 0; c < candidates.length; c++) {
+                for (int i = 0; i < list.length; i++) {
+                    if (candidates[c].equals(list[i].trim())) {
+                        if (!candidates[c].equals(want)) {
+                            Log8.event("STYLE", want + " as " + candidates[c]);
+                        }
+                        return candidates[c];
+                    }
+                }
             }
             Log8.event("STYLE", want + " not in " + values);
-            return "standard";
+            return want;
         } catch (Throwable t) {
             return want;
+        }
+    }
+
+    private String readStyle() {
+        try {
+            String s = camera.getParameters().get("color-mode");
+            return s == null ? "?" : s;
+        } catch (Throwable t) {
+            return "?";
+        }
+    }
+
+    /** The wanted Picture Effect, or the runtime spelling the body advertises. */
+    private String resolveEffect(String want) {
+        if (want == null) return "off";
+        try {
+            Camera.Parameters p = camera.getParameters();
+            String values = p.get("picture-effect-values");
+            if (values == null) return want;
+            String[] list = values.split(",");
+            String[] candidates = effectAliases(want);
+            for (int c = 0; c < candidates.length; c++) {
+                for (int i = 0; i < list.length; i++) {
+                    if (candidates[c].equals(list[i].trim())) {
+                        if (!candidates[c].equals(want)) {
+                            Log8.event("EFFECT", want + " as " + candidates[c]);
+                        }
+                        return candidates[c];
+                    }
+                }
+            }
+            Log8.event("EFFECT", want + " not in " + values);
+            return want;
+        } catch (Throwable t) {
+            return want;
+        }
+    }
+
+    private static String[] effectAliases(String effect) {
+        if ("richtone-mono".equals(effect)) return RICHTONE_ALIASES;
+        if ("rough-mono".equals(effect)) return ROUGH_ALIASES;
+        return new String[] { effect };
+    }
+
+    /** Whether a runtime style or effect token means monochrome. */
+    private static boolean isMonoToken(String v) {
+        if (v == null) return false;
+        for (int i = 0; i < MONO_ALIASES.length; i++) {
+            if (MONO_ALIASES[i].equals(v)) return true;
+        }
+        return v.indexOf("mono") >= 0;
+    }
+
+    /** Writes color-mode alone, then each mono spelling; returns the last read-back. */
+    private String retryMonoStyle(String style) {
+        String got = readStyle();
+        if (!writeStyle(style)) return got;
+        got = readStyle();
+        if (isMonoToken(got)) return got;
+        for (int i = 0; i < MONO_ALIASES.length; i++) {
+            String alias = MONO_ALIASES[i];
+            if (alias.equals(style)) continue;
+            if (!writeStyle(alias)) return got;
+            got = readStyle();
+            if (isMonoToken(got)) return got;
+        }
+        return got;
+    }
+
+    /** Writes the mono Picture Effect alone, then each spelling. */
+    private String retryMonoEffect(String effect) {
+        String got = readEffect();
+        String[] aliases = effectAliases(effect);
+        for (int i = 0; i < aliases.length; i++) {
+            if (!writeEffect(aliases[i])) return got;
+            got = readEffect();
+            if (isMonoToken(got)) return got;
+        }
+        return got;
+    }
+
+    private boolean writeStyle(String value) {
+        return writeParam("color-mode", value, "STYLE-RETRY");
+    }
+
+    private boolean writeEffect(String value) {
+        return writeParam("picture-effect", value, "EFFECT-RETRY");
+    }
+
+    private boolean writeParam(String key, String value, String logKind) {
+        try {
+            Camera.Parameters p = camera.getParameters();
+            p.set(key, value);
+            camera.setParameters(p);
+            return true;
+        } catch (Throwable t) {
+            Log8.failure(logKind, t);
+            return false;
+        }
+    }
+
+    private String readEffect() {
+        try {
+            String s = camera.getParameters().get("picture-effect");
+            return s == null ? "?" : s;
+        } catch (Throwable t) {
+            return "?";
         }
     }
 
@@ -445,5 +606,6 @@ final class Cam {
         camera = null;
         cameraEx = null;
         previewing = false;
+        note = "";
     }
 }

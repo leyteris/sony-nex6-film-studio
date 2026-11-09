@@ -22,9 +22,16 @@ final class Looks {
         final int ab;          // amber positive, -7..+7
         final int gm;          // green positive, -7..+7
         final String dro;      // "auto" or "off"
+        final String effect;   // mono Picture Effect, or null for "off"
 
         Look(String tag, String name, int accent, String style,
              int sat, int con, int sharp, String wb, int kelvin, int ab, int gm, String dro) {
+            this(tag, name, accent, style, sat, con, sharp, wb, kelvin, ab, gm, dro, null);
+        }
+
+        Look(String tag, String name, int accent, String style,
+             int sat, int con, int sharp, String wb, int kelvin, int ab, int gm, String dro,
+             String effect) {
             this.tag = tag;
             this.name = name;
             this.accent = accent;
@@ -37,6 +44,7 @@ final class Looks {
             this.ab = ab;
             this.gm = gm;
             this.dro = dro;
+            this.effect = effect;
         }
 
         String wbLabel() {
@@ -69,11 +77,11 @@ final class Looks {
             new Look("CNEG", "Fuji Classic Negative", 0xFF7A6A58, "neutral", -1, +1, 0, "kelvin", 5400, +2, 0, "auto"),
             new Look("ETERNA", "Fuji ETERNA Cinema", 0xFF6E7F86, "neutral", -2, -1, -1, "auto", 0, 0, 0, "auto"),
             new Look("BLEACH", "Fuji ETERNA Bleach", 0xFFB9B4A6, "neutral", -3, +2, +1, "auto", 0, 0, 0, "off"),
-            new Look("ACROS", "Fuji ACROS Mono", 0xFFBFBFBF, "mono", 0, +1, +1, "auto", 0, 0, 0, "auto"),
+            new Look("ACROS", "Fuji ACROS Mono", 0xFFBFBFBF, "mono", 0, +1, +1, "auto", 0, 0, 0, "auto", "richtone-mono"),
             new Look("GR+", "Ricoh GR Positive", 0xFF7FA36B, "vivid", +1, +1, +1, "auto", 0, 0, 0, "auto"),
             new Look("GR-", "Ricoh Negative Film", 0xFF8C7A63, "neutral", -1, +1, 0, "kelvin", 5600, +1, 0, "auto"),
-            new Look("HCBW", "Ricoh Hi-Contrast B&W", 0xFF9E9E9E, "mono", 0, +3, +2, "auto", 0, 0, 0, "off"),
-            new Look("MORI", "Ricoh Moriyama Mono", 0xFF6B6B6B, "mono", 0, +3, +3, "auto", 0, 0, 0, "off"),
+            new Look("HCBW", "Ricoh Hi-Contrast B&W", 0xFF9E9E9E, "mono", 0, +3, +2, "auto", 0, 0, 0, "off", "rough-mono"),
+            new Look("MORI", "Ricoh Moriyama Mono", 0xFF6B6B6B, "mono", 0, +3, +3, "auto", 0, 0, 0, "off", "rough-mono"),
             new Look("CROSS", "Ricoh Cross Process", 0xFFB07A9E, "vivid", +3, +2, 0, "kelvin", 5000, +2, 0, "off")
     };
 
@@ -85,7 +93,7 @@ final class Looks {
         if (pct >= 100) return look;
         return new Look(look.tag, look.name, look.accent, look.style,
                 scale(look.sat, pct), scale(look.con, pct), scale(look.sharp, pct),
-                look.wb, look.kelvin, scale(look.ab, pct), scale(look.gm, pct), look.dro);
+                look.wb, look.kelvin, scale(look.ab, pct), scale(look.gm, pct), look.dro, look.effect);
     }
 
     private static int scale(int value, int pct) {
