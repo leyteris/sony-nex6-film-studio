@@ -20,8 +20,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / 'app'
 BUILD = ROOT / 'build-local/app'
-OUTPUT = ROOT / 'output/FilmStudioNex6-0.2.12-alpha.apk'
-VALIDATION = ROOT / 'validation/FilmStudioNex6-0.2.12-alpha.json'
+OUTPUT = ROOT / 'output/FilmStudioNex6-0.2.16-alpha.apk'
+VALIDATION = ROOT / 'validation/FilmStudioNex6-0.2.16-alpha.json'
 
 
 def sdk_root():
@@ -188,15 +188,19 @@ def main():
         'cameras_tested': [],
         'install_note': (
             'Standalone package; it installs beside older Film Studio builds. '
-            'If the camera returns to the native UI, copy /sdcard/FSNEX6/FSLOG.TXT for diagnosis.'
+            'DISP opens the on-body log overlay, which does not depend on the card files '
+            'reading back. /sdcard/FSNEX6/REPORT.TXT (fresh closed snapshot on exit/crash) and '
+            'FSLOG.TXT (append journal) are still written for a card-reader copy.'
         ),
         'limitations': [
-            'looks are live camera parameters (color mode, saturation, contrast, sharpness, WB, DRO), not the 3D LUT engine',
+            'looks are live camera parameters (color mode, mono Picture Effect, saturation, contrast, sharpness, WB, DRO), not the 3D LUT engine',
+            'the mode dial must stay on P/A/S/M: iAuto and SCN let the camera override Creative Style and Picture Effect, so the look does not land',
+            'monochrome looks set color-mode=mono and a mono Picture Effect; when the effect is active the camera ignores Creative Style adjustments',
             'settings are applied only while the app is open and restored on exit',
             'center button or shutter saves the JPEG through the native camera; FSLOG reports whether a new DCIM file appeared',
             'UI starts at the full panel; DELETE or SK2 cycles full -> pill -> hidden with the live view always visible',
             'S1 draws an app-centered focus frame (white searching, green locked, red failed); it is not the camera AF point, which PMCA does not expose',
-            'still images only; PLAY, DISP and MOVIE are swallowed and no movie recording UI is provided',
+            'still images only; PLAY and MOVIE are swallowed; DISP shows the in-memory log overlay',
         ],
         'looks': 15,
         'strengths': [30, 50, 70, 100],
@@ -209,7 +213,7 @@ def main():
             'assets/fonts/NotoSansSC-UI.ttf (subset, SIL OFL 1.1)',
             'assets/fonts/NotoSansTC-UI.ttf (subset, SIL OFL 1.1)',
         ],
-        'log_path': '/sdcard/FSNEX6/FSLOG.TXT (8.3-safe directory; root FSLOG.TXT only as last-resort fallback)',
+        'log_path': 'DISP overlay (in-memory, last 600 lines, no card read required); /sdcard/FSNEX6/REPORT.TXT (fresh closed snapshot) + FSLOG.TXT (append journal; 8.3-safe directory, root FSLOG.TXT only as last-resort fallback)',
     }
     VALIDATION.parent.mkdir(parents=True, exist_ok=True)
     with open(VALIDATION, 'w', encoding='utf-8') as f:
