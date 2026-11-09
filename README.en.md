@@ -4,26 +4,27 @@
 
 A standalone, unofficial film-look app for the **Sony NEX-6**. It expresses the fifteen Film Studio looks with runtime camera parameters the NEX-6 actually accepts, draws its own control overlay over the live view, and restores the camera's original parameters on exit.
 
-> **Status: `0.2.12-alpha` (versionCode 14), not yet installed or run on a NEX-6.** The build, API-10 static checks and Android 37 emulator smoke tests are complete; `camera_tested=false`. Until on-camera evidence exists, this project makes no compatibility or usability claim.
+> **Status: `0.2.16-alpha` (versionCode 18), no readable NEX-6 hardware logs yet.** 0.2.13 did start on a NEX-6 and wrote its card files, but the retrieved `REPORT.TXT`/`FSLOG.TXT` arrived as all-NUL over MTP. A 0.2.15 check on hardware confirmed the missing premise: with the mode dial in iAuto / SCN the monochrome looks still rendered in color, while P produced grayscale — those auto modes hand Creative Style and Picture Effect back to the camera. 0.2.16 therefore adds an orange `P/A/S/M: STYLE` hint at the right of the bottom tips line and keeps the 0.2.15 dual mono path. The build, API-10 static checks and Android 37 emulator smoke tests are complete; `camera_tested=false`. Until on-camera evidence exists, this project makes no compatibility or usability claim.
 
 ## Scope
 
 - **Target**: Sony NEX-6, firmware 1.03, Android 2.3.7 / API 10.
 - **Standalone app**: package `com.filmstudio.nex6`; it can coexist with the older a5100 Film Studio.
-- **Still images only**: there is no movie UI; PLAY, DISP and MOVIE are ignored.
+- **Still images only**: there is no movie UI; PLAY and MOVIE are ignored, and DISP toggles the on-screen log.
 - **Runtime parameters only**: it writes `Camera.Parameters` and restores them on exit or pause; no firmware changes, no camera settings storage, no factory reset.
 - **Parameter-level approximation**: the NEX-6 has no matrix/gamma or 3D LUT channel, so the result will not be pixel-identical to the a5100 build.
 
 ## Features
 
-- 15 looks (10 Fujifilm-reference, 5 Ricoh-reference), 4 strengths (30 / 50 / 70 / 100%).
-- LEFT/RIGHT or the wheels switch looks; UP/DOWN change strength, with live-view feedback.
+- 15 looks (10 Fujifilm-reference, 5 Ricoh-reference), 4 strengths (30 / 50 / 70 / 100%). **Set the mode dial to P / A / S / M first**: iAuto and SCN let the camera own the look, so B&W renders in color.
+- The monochrome looks (ACROS / HCBW / MORI) write both Creative Style `mono` and a mono Picture Effect (`richtone-mono` / `rough-mono`): if the firmware drops one path, the other can still produce a grayscale frame. Both read-backs appear in the top-right corner as `CM … FX …`.
+- An orange `P/A/S/M: STYLE` hint stays at the right of the full panel's bottom tips line. LEFT/RIGHT or the wheels switch looks; UP/DOWN change strength, with live-view feedback.
 - Three-stage UI: full panel → bottom-left pill → live view only; DELETE or SK2 cycles.
 - English, Simplified Chinese and Traditional Chinese UI following the system locale; bundled Noto Sans SC/TC subsets supply the CJK glyphs the firmware lacks.
 - S1 half-press autofocus with an app-drawn focus frame (white searching, green locked, red failed).
 - Center button or shutter captures a JPEG; the app checks `DCIM` for a new file and logs the result.
 - The last look and strength are restored on the next launch.
-- Card log at `/sdcard/FSNEX6/FSLOG.TXT`, with no IP address or serial number.
+- Card diagnostic snapshot at `/sdcard/FSNEX6/REPORT.TXT` (written on exit/crash, readable), with no IP address or serial number.
 
 ## Screenshots
 
@@ -57,7 +58,8 @@ PMCA (PlayMemories Camera Apps) is the on-camera platform required to install th
 | DELETE / SK2 | Cycle UI stage (full → pill → hidden) |
 | MENU / SK1 | Restore parameters and exit |
 | BACK | Restore parameters and exit |
-| PLAY / DISP / MOVIE | Ignored |
+| DISP | Open / close the on-screen log; UP/DOWN page it while open, BACK closes it |
+| PLAY / MOVIE | Ignored |
 
 ## The 15 looks
 
@@ -89,11 +91,11 @@ Prerequisites:
 2. Wi-Fi ADB is enabled on the camera (Sony-PMCA-RE / OpenMemories: Tweak).
 3. Android Platform-Tools are installed on the computer.
 
-Download `FilmStudioNex6-0.2.12-alpha.apk` from the Releases page (once published), or use the local build at `output/FilmStudioNex6-0.2.12-alpha.apk`, then run:
+Download `FilmStudioNex6-0.2.16-alpha.apk` from the Releases page (once published), or use the local build at `output/FilmStudioNex6-0.2.16-alpha.apk`, then run:
 
 ```sh
 adb connect CAMERA_IP:5555
-adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.12-alpha.apk
+adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.16-alpha.apk
 ```
 
 `CAMERA_IP` is a placeholder; replace it with the address currently shown on the camera and keep the `:5555` port. Mask the real IP before sharing screenshots or logs.
@@ -101,7 +103,7 @@ adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.12-alpha.apk
 SHA-256 of the current build:
 
 ```text
-51889474607a71f8b2f0db1ad2aab74f924d6db7c50a72bfaa2a5df0d2f2e349
+5cc4e4da07772b87de8a177f3c76fe567cdd2d328c1b2e635fd728bf69013001
 ```
 
 See the **[English installation guide](docs/INSTALL.en.md)** for the full procedure, first-run checks, log retrieval and troubleshooting.
@@ -110,21 +112,28 @@ See the **[English installation guide](docs/INSTALL.en.md)** for the full proced
 
 ## Logs
 
-The app writes diagnostics to the card:
+Look at the camera screen first: press **DISP** to open the on-screen log (the last 600 lines in memory), page it with UP/DOWN and press DISP or BACK to close; MENU still exits. It needs no card read and is the only channel that has worked on the NEX-6 so far, so a photo of the `PROBE`, `STYLE` and `DROPPED` lines is enough for a report.
+
+![DISP on-screen log (emulator)](docs/images/log-overlay.png)
+
+> Captured on the Android 37 emulator to show the overlay layout; it is not a NEX-6 hardware screenshot.
+
+The app still writes two files to the card:
 
 ```text
-/sdcard/FSNEX6/FSLOG.TXT
+/sdcard/FSNEX6/REPORT.TXT   snapshot written once and closed on exit/crash
+/sdcard/FSNEX6/FSLOG.TXT    append journal kept while running (crash residue)
 ```
 
-Both names satisfy the Sony FUSE DOS 8.3 limit. The card-root `FSLOG.TXT` is used only if the directory cannot be created. The log records body/firmware, preview size, key scan codes, parameter apply/drop results, capture, card-save checks, focus results and exceptions; it does **not** record IP addresses, serial numbers or image content.
+Both names satisfy the Sony FUSE DOS 8.3 limit. Both files copied off a real NEX-6 over MTP and a remote-desktop session arrived as all-NUL, so reading the card files is not confirmed on hardware; 0.2.14 and later read the previous session back at startup and record `PROBE size=… zero=… text=…`, and again right after an export. If `PROBE` reports `text=0`, take `FSNEX6/REPORT.TXT` off the SD card with a **card reader** instead of MTP. Reopening the app within the same process keeps earlier lines, so `REPORT.TXT` covers the last few sessions (600-line cap). The card root is used only if the directory cannot be created. The log records body/firmware, preview size, key scan codes, parameter apply/drop results, Creative Style and Picture Effect read-backs (`CM … FX …`), capture, card-save checks, focus results and exceptions; it does **not** record IP addresses, serial numbers or image content.
 
-Retrieve it with:
+Retrieve it with (exit the app normally first so `REPORT.TXT` is written):
 
 ```sh
-adb -s CAMERA_IP:5555 pull /sdcard/FSNEX6/FSLOG.TXT
+adb -s CAMERA_IP:5555 pull /sdcard/FSNEX6/REPORT.TXT
 ```
 
-If the file is all NUL or incomplete, exit the app before pulling, or zip the file on the camera and transfer the archive.
+If `REPORT.TXT` is missing or all-NUL, read the same path from the SD card with a card reader rather than copying over MTP.
 
 ## Building
 
@@ -134,7 +143,7 @@ Requirements: JDK 17, Android SDK build-tools 36.0.0, `platforms/android-37.0/an
 python3 tools/build.py
 ```
 
-The APK is written to `output/FilmStudioNex6-0.2.12-alpha.apk` and a metadata file to `validation/FilmStudioNex6-0.2.12-alpha.json`. Signing uses the local `.private/signing.pem`, which is never committed or uploaded. If it is missing, the script signs with a throwaway debug key; that signature differs and cannot update an installed release in place.
+The APK is written to `output/FilmStudioNex6-0.2.16-alpha.apk` and a metadata file to `validation/FilmStudioNex6-0.2.16-alpha.json`. Signing uses the local `.private/signing.pem`, which is never committed or uploaded. If it is missing, the script signs with a throwaway debug key; that signature differs and cannot update an installed release in place.
 
 GitHub Actions ([.github/workflows/build.yml](.github/workflows/build.yml)) runs the API-10 compile gate and builds the APK on every push and pull request, then uploads it as a workflow artifact. CI has no signing key, so that artifact is debug-signed and is meant for testing only; it cannot update an installed local or release build.
 
@@ -163,6 +172,7 @@ inputs/         Local toolchain and third-party inputs (git-ignored)
 ## Known limitations
 
 - No hardware validation yet; preview, capture, card save, focus callbacks and exit restore are unconfirmed on a NEX-6.
+- **The mode dial must stay on P / A / S / M**: iAuto and SCN hand Creative Style and Picture Effect back to the camera, so the look does not land. The bottom-right hint of the full panel reads `P/A/S/M: STYLE`.
 - Parameter-level approximation, not a port of the a5100 matrix/gamma or LUT engine.
 - Looks apply only while the app is open; the native camera does not retain them.
 - Some bodies may drop Kelvin, fine-tune or DRO parameters; the app falls back to the core subset and logs `DROPPED`.

@@ -1,6 +1,6 @@
 # 开发与构建
 
-本文说明如何从源码构建、验证、签名和测试 Film Studio NEX-6。当前目标版本为 `0.2.12-alpha`，源码在 `app/`，构建入口是 `tools/build.py`。
+本文说明如何从源码构建、验证、签名和测试 Film Studio NEX-6。当前目标版本为 `0.2.16-alpha`，源码在 `app/`，构建入口是 `tools/build.py`。
 
 > 实机验证状态见 [VALIDATION.md](VALIDATION.md)。在真实 NEX-6 上运行并取回日志之前，`camera_tested` 必须保持 `false`。
 
@@ -47,13 +47,13 @@ python3 tools/build.py
 5. 把 `classes.dex` 加入未签名 APK；
 6. `tools/sign_apk.py` 生成 v1 JAR 签名（OpenSSL `smime -noattr -binary`，SHA-1）；
 7. 用 `aapt dump badging`、`apksigner verify --min-sdk-version 10` 检查；
-8. 写入 `validation/FilmStudioNex6-0.2.12-alpha.json`。
+8. 写入 `validation/FilmStudioNex6-0.2.16-alpha.json`。
 
 产物：
 
 ```text
-output/FilmStudioNex6-0.2.12-alpha.apk
-validation/FilmStudioNex6-0.2.12-alpha.json
+output/FilmStudioNex6-0.2.16-alpha.apk
+validation/FilmStudioNex6-0.2.16-alpha.json
 ```
 
 构建结束会打印包名、版本、dex 版本、SHA-256 和大小。验证记录里的 `camera_tested` 固定为 `false`，只有实机证据才能修改。
@@ -72,7 +72,7 @@ validation/FilmStudioNex6-0.2.12-alpha.json
 JAVA_HOME="$PWD/inputs/amazon-corretto-17.jdk/Contents/Home" \
   "$HOME/Library/Android/sdk/build-tools/36.0.0/apksigner" \
   verify --min-sdk-version 10 --print-certs \
-  output/FilmStudioNex6-0.2.12-alpha.apk
+  output/FilmStudioNex6-0.2.16-alpha.apk
 ```
 
 ## 4. API 10 编译门
@@ -101,13 +101,13 @@ inputs/amazon-corretto-17.jdk/Contents/Home/bin/javac \
 
 - 必须同时把 `android-37.0/android.jar` 放在 bootclasspath 后面，否则 `java.lang` 等核心类无法解析；
 - stub 在前，所以任何高于 API 10 的 `android.*` 类型或方法都会在这里失败；
-- 通过时 `0.2.12` 生成 21 个 class。
+- 通过时 `0.2.16` 生成 22 个 class（含内部类）。
 
 再检查最终 dex 的 `android.*` 类型都能在 stub 中找到：
 
 ```sh
 rm -rf /tmp/nex6-dexcheck && mkdir -p /tmp/nex6-dexcheck
-unzip -p output/FilmStudioNex6-0.2.12-alpha.apk classes.dex > /tmp/nex6-dexcheck/classes.dex
+unzip -p output/FilmStudioNex6-0.2.16-alpha.apk classes.dex > /tmp/nex6-dexcheck/classes.dex
 "$HOME/Library/Android/sdk/build-tools/36.0.0/dexdump" -d /tmp/nex6-dexcheck/classes.dex > /tmp/nex6-dexcheck/dump.txt
 python3 - <<'PY'
 import re, zipfile
@@ -122,7 +122,7 @@ for r in missing:
 PY
 ```
 
-`0.2.12` 的结果是 35 个 `android.*` 类型、0 个缺失。`tools/api10_public_ids.txt` 是另一份资源 ID 清单（AOSP android-2.3.7_r1 `public.xml`），用于检查资源层是否引用框架私有 ID；当前资源表只有 `ic_launcher` 和 `app_name`。
+`0.2.16` 的结果是 35 个 `android.*` 类型、0 个缺失。`tools/api10_public_ids.txt` 是另一份资源 ID 清单（AOSP android-2.3.7_r1 `public.xml`），用于检查资源层是否引用框架私有 ID；当前资源表只有 `ic_launcher` 和 `app_name`。
 
 ## 5. 字体
 
@@ -150,7 +150,7 @@ adb shell wm density 160
 3. 安装并启动：
 
 ```sh
-adb install -r output/FilmStudioNex6-0.2.12-alpha.apk
+adb install -r output/FilmStudioNex6-0.2.16-alpha.apk
 adb shell am start -n com.filmstudio.nex6/.MainActivity
 ```
 
@@ -165,20 +165,27 @@ adb shell am start -n com.filmstudio.nex6/.MainActivity
 | MENU | `adb shell input keyevent 82` |
 | BACK | `adb shell input keyevent 4` |
 | 半按 S1（保持 3 秒） | `adb shell input keyevent --duration 3000 80` |
+| DISP | `adb shell input keyevent 165`（模拟器专用映射；实机扫描码 608） |
+
+模拟器没有 NEX-6 的原始扫描码；`fallback()` 把 `KEYCODE_INFO`（165）映射为 `K_DISP`（608），因此日志仍显示 `scan=608 keyCode=165`。这条路径只用于在模拟器上走通日志叠加层。
 
 5. 截图与日志：
 
 ```sh
 adb exec-out screencap -p > /tmp/nex6.png
-adb shell cat /sdcard/FSNEX6/FSLOG.TXT
+adb shell input keyevent 165          # 打开屏内日志
+adb shell input keyevent 82           # MENU 退出并导出 REPORT.TXT
+adb pull /sdcard/FSNEX6/REPORT.TXT
 ```
 
-语言测试可在系统设置中为应用单独选择语言（Android 13+），或在模拟器中切换系统语言后重启应用。日志的 `START` 行会记录 `ui=zh-CN` / `ui=zh-TW` / `ui=en`。
+0.2.14 起优先检查屏内日志：DISP 打开后应看到 `LOG n 起-止` 标题、右上角关闭/翻页提示和 `APPLY ... cm=` 行；0.2.15 的黑白风格还会显示 `FX <picture-effect>`（如 `CM mono FX richtone-mono`），启动时 `CAP picture-effect=…` 记录固件公布的效果值，必要时 `EFFECT` / `MONO` 记录别名解析与重试。0.2.16 还需检查完整面板底部右侧的橙色 `P/A/S/M:风格`：与左侧按键提示同一基线、无重叠；简体中文 `P/A/S/M:风格`、英文 `P/A/S/M: STYLE`。上/下翻页、再按 DISP 或 BACK 关闭。`REPORT.TXT` 是退出/崩溃时生成的一次性快照，可读；`FSLOG.TXT` 是运行期间的追加日志，在应用存活时读回可能是全 NUL（Sony FUSE 不允许同时读写同一文件）。导出后 `FSLOG.TXT` 会记录 `EXPORT-VERIFY size=… zero=… text=…`，下次启动记录 `PROBE` 行，用来自证卡上文件是否真的可读。
+
+语言测试可在系统设置中为应用单独选择语言（Android 13+）；在 AOSP 模拟器上也可用 `adb shell cmd locale set-device-locale zh-Hans-CN`（重启应用后生效）。日志的 `START` 行会记录 `ui=zh-CN` / `ui=zh-TW` / `ui=en`。
 
 模拟器的已知差异：
 
 - 没有 `CameraEx`，应用回退到 `android.hardware.Camera`；
-- 假相机没有 `color-mode` 和 `rgb-matrix-mode`，某些色温参数会被拒绝，应用到核心参数并记录 `DROPPED`；
+- 假相机没有 `color-mode`、`picture-effect` 和 `rgb-matrix-mode`，且会原样回显任意写入值；某些色温参数会被拒绝，应用退到核心参数并记录 `DROPPED`；
 - 假相机总是返回合焦，红色对焦失败路径不会被触发；
 - `takePicture(null,null,null)` 不产生 `DCIM` 文件，`SAVED` 只能是 `no new JPEG`；
 - 不能验证 NEX-6 的扫描码、落卡时序、预览比例和退出恢复。

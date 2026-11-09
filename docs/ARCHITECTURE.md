@@ -1,6 +1,6 @@
 # 架构与实现：Film Studio NEX-6
 
-状态：`0.2.12-alpha` 独立外壳已实现，静态验收和模拟器冒烟测试通过，**尚未在任何相机上运行**（`camera_tested=false`）。目标机型为 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。
+状态：`0.2.16-alpha` 独立外壳已实现，静态验收和模拟器冒烟测试通过；0.2.13 已在用户的 NEX-6 上启动并写卡，但回传日志全 NUL，**各项行为在实机上均未验证**（`camera_tested=false`）。用户在 0.2.15 实机上确认：拨盘在 iAuto / SCN 时黑白出彩色，P/A/S/M 下正常——0.2.16 因此加入底部 `P/A/S/M` 提示。目标机型为 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。
 
 > **English summary.** Film Studio NEX-6 is a standalone PMCA app for the first-generation Sony NEX-6. The a5100 Film Studio engine depends on `CameraEx.setRGBMatrix` and the extended gamma table, which the NEX-6 firmware does not expose. This app therefore keeps the Film Studio look list but expresses each look with runtime `Camera.Parameters` the NEX-6 does accept. It is a plain `Activity` + `SurfaceView` + hand-drawn `Canvas` overlay, with every Sony class reached through reflection. It is an approximation, not a LUT or matrix/gamma port.
 
@@ -46,25 +46,27 @@ native_color_preview_available: false
 | 色温 | `color-temperture-white-balance` | K × 100（Sony 固件拼写就是 `temperture`） |
 | 白平衡微调 | `light-balance-for-white-balance`（A-B）<br>`color-compensation-for-white-balance`（G-M） | -7..+7；相机以洋红为正 |
 | DRO | `dro-mode` / `dro-level` | off / auto / 1..5 |
-| 图片效果 | `picture-effect` | off 等 |
+| 图片效果 | `picture-effect` | off / richtone-mono / rough-mono（单色） |
 | 画质 | `storage-fmt` / `jpeg-quality` | jpeg；50 |
 | 矩阵模式 | `rgb-matrix-mode` | 仅在相机暴露该 key 时写 `false` |
 
-`color-mode` 写入前会先读取 `color-mode-values`；不支持的值回退 `standard` 并写 `STYLE`。`rgb-matrix-mode` 未知时不写，避免整个参数包被拒绝。
+`color-mode` 不再把固件未列出的值降级为 `standard`：Sony 对未知值是静默忽略而不是抛错，降级会让 `mono` 永远变成彩色。现在按风格表发送目标值（含 `mono`/`bw`/`blackwhite` 等别名匹配），`setParameters()` 后回读 `color-mode`。
+
+黑白风格再加一条独立路径：ACROS 同时写 `picture-effect=richtone-mono`，HCBW / MORI 写 `rough-mono`。Picture Effect 由相机自己的图像管线处理，不依赖 Creative Style 是否接受 `mono`；只要两路中有一路被保留，成片就应是灰阶。两路都回读并显示在右上角（`CM mono FX richtone-mono`）。效果开启时相机忽略创意风格滑块，因此低强度对对比/锐度的缩放在效果路径下可能不生效——这是为保证黑白而接受的取舍。`rgb-matrix-mode` 未知时不写，避免整个参数包被拒绝。
 
 ## 4. 应用结构
 
 ```text
 MainActivity (Activity)
 ├─ SurfaceView            相机实时取景
-├─ UiView (Canvas)        顶栏 / 强度 / 5 张风格卡 / 胶囊 / 提示 / 对焦框
+├─ UiView (Canvas)        顶栏 / 强度 / 5 张风格卡 / 胶囊 / 提示 / 对焦框 / 日志叠加层
 ├─ Cam                    CameraEx 反射 + Camera.Parameters
 │  ├─ open()              CameraEx.open(0, null) → getNormalCamera()
 │  ├─ apply()             写入风格参数，失败时退化到核心参数
 │  ├─ focus()             Camera.autoFocus(callback)
 │  ├─ shoot()             Camera.takePicture(null, null, null)
 │  └─ restore()           按进入时捕获的原值逐项恢复
-└─ Log8                   /sdcard/FSNEX6/FSLOG.TXT
+└─ Log8                   内存环形缓冲（600 行）+ REPORT.TXT（快照）+ FSLOG.TXT（追加）
 ```
 
 源码位于 `app/src/com/filmstudio/nex6/`：
@@ -76,9 +78,9 @@ MainActivity (Activity)
 | `UiView.java` | 全部界面绘制，无图片资源 |
 | `Looks.java` | 15 个风格的参数表与强度缩放 |
 | `Lang.java` | 简/繁/英界面文本与内置字体选择 |
-| `Log8.java` | 8.3 安全路径上的尽力日志 |
+| `Log8.java` | 8.3 安全路径上的尽力日志、回读探针与内存快照 |
 
-编译后共 21 个 class（含内部类与匿名回调），只引用 35 个 `android.*` 类型，全部存在于 Android 2.3.3 stub。
+编译后共 22 个 class（含内部类与匿名回调），只引用 35 个 `android.*` 类型，全部存在于 Android 2.3.3 stub。
 
 ## 5. 15 个风格
 
@@ -100,7 +102,9 @@ MainActivity (Activity)
 | 13 | MORI | Ricoh Moriyama Mono | mono | 0 | +3 | +3 | AWB | off |
 | 14 | CROSS | Ricoh Cross Process | vivid | +3 | +2 | 0 | 5000K, A+2 | off |
 
-强度为 30% / 50% / 70% / 100%。以 100% 为完整值，低强度对饱和、对比、锐度和 A-B/G-M 做线性缩放并四舍五入；创意风格、色温和 DRO 档位不插值。黑白风格在低强度下仍是黑白，只降低对比和锐度。
+强度为 30% / 50% / 70% / 100%。以 100% 为完整值，低强度对饱和、对比、锐度和 A-B/G-M 做线性缩放并四舍五入；创意风格、色温和 DRO 档位不插值。黑白风格在低强度下仍是黑白；若单色 Picture Effect 生效，对比/锐度滑块可能被相机忽略，灰阶由效果本身决定。
+
+ACROS 另写 `picture-effect=richtone-mono`；HCBW / MORI 写 `rough-mono`（高反差黑白）。
 
 > 这是参数级近似，不是 LUT 移植。风格名称只用于说明取向，不代表与富士或理光官方色彩逐像素一致。
 
@@ -109,10 +113,12 @@ MainActivity (Activity)
 每次切换风格或强度：
 
 1. 计算当前强度下的参数集；
-2. `color-mode` 先对照 `color-mode-values`；
-3. 完整写入 `color-mode`、饱和、对比、锐度、WB/Kelvin、A-B/G-M、DRO、`picture-effect=off`、`storage-fmt=jpeg`、`jpeg-quality=50`；
+2. `color-mode` 按风格表的目标值发送；若 `color-mode-values` 列出的拼写不同，尝试别名（如 `mono`），但**不**因为未列出就降级；黑白风格同时按 `picture-effect-values` 解析单色效果拼写（`richtone-mono` / `rough-mono` 及其别名）；
+3. 完整写入 `color-mode`、饱和、对比、锐度、WB/Kelvin、A-B/G-M、DRO、`picture-effect`（彩色风格写 `off`，黑白风格写单色效果）、`storage-fmt=jpeg`、`jpeg-quality=50`；
 4. `setParameters()` 后回读，把被相机丢弃的 key 写入 `DROPPED`；
-5. 完整写入抛异常时，退化为只含风格、饱和、对比、锐度、图片效果和 JPEG 设置的核心子集；再失败则界面显示「参数被拒绝」。
+5. 黑白风格两路都不是 mono 系值时，先单独重写 `color-mode` 并逐个尝试 mono 拼写，再单独重写单色效果并逐个尝试拼写；每次重试都回读，最终结论写入 `MONO` 与右上角 `CM … FX …`；
+6. 回读结果与目标不一致的其它参数只记录，不阻塞后续拍摄；
+7. 完整写入抛异常时，退化为只含风格、饱和、对比、锐度、图片效果和 JPEG 设置的核心子集；再失败则界面显示「参数被拒绝」。
 
 退出、返回或暂停时，按进入时捕获的 13 个 key 逐项恢复。恢复失败写 `RESTORE-FAIL`，不会让应用崩溃。
 
@@ -129,17 +135,22 @@ MainActivity (Activity)
 | DELETE / SK2 | 595 / 513 | 界面阶段循环（抬起触发） |
 | MENU / SK1 | 514 / 229 | 恢复参数并退出（抬起触发） |
 | BACK | — | 恢复参数并退出 |
-| PLAY / DISP / MOVIE | 207 / 608 / 515 | 吞掉，避免误触 |
+| DISP | 608 | 打开 / 关闭屏内日志；打开时上/下翻页，BACK 关闭，MENU 仍退出 |
+| PLAY / MOVIE | 207 / 515 | 吞掉，避免误触 |
 
-没有 Sony 扫描码时，`fallback()` 把标准 Android keyCode 映射到同一功能；`KEYCODE_FOCUS`（80）映射到 S1，`KEYCODE_CAMERA` 映射到 S2，便于模拟器测试。实机扫描码优先。
+没有 Sony 扫描码时，`fallback()` 把标准 Android keyCode 映射到同一功能；`KEYCODE_FOCUS`（80）映射到 S1，`KEYCODE_CAMERA` 映射到 S2，`KEYCODE_INFO`（165）映射到 DISP，便于模拟器测试。实机扫描码优先。
 
 界面有三阶段，短按 DELETE 或 SK2 依次切换：
 
-1. **full**：顶部状态条（应用名、当前风格、强度、参数摘要）、强度分段、固定 5 张风格卡、底部提示行；
+1. **full**：顶部状态条（应用名、当前风格、强度、参数摘要、右上角 `CM <color-mode> FX <picture-effect>`）、强度分段、固定 5 张风格卡、底部提示行；彩色风格只显示 `CM`。底部提示行左侧是按键说明，右侧同一基线右对齐一条橙色 `P/A/S/M:风格`（英 `P/A/S/M: STYLE`）模式提示；
 2. **pill**：左下角小胶囊，显示风格标签 + 中文简称 + 强度；错误信息显示在胶囊上方；
 3. **hidden**：只保留实时取景；切换风格/强度时仍有约 1.4 秒的居中提示。
 
-三阶段下风格、强度、拍摄、对焦和 MENU 退出都可用。应用重启从 full 开始。
+三阶段下风格、强度、拍摄、对焦和 MENU 退出均已实现。应用重启从 full 开始。DISP 可随时覆盖一层只读日志，打开时其它按键（除 MENU 退出、BACK 关闭）被吞掉。
+
+### 模式拨盘
+
+iAuto 与 SCN 下 NEX-6 由相机接管创意风格和照片效果，应用写入的 `color-mode` / `picture-effect` 不落地，黑白会出彩色。完整面板右侧的 `P/A/S/M:风格` 提示只提醒用户把拨盘放在 P/A/S/M；它不读取拨盘位置，也不会因模式错误而阻止操作。该现象来自用户实机观察（0.2.15），不是可读日志证据。
 
 ### 对焦框
 
@@ -162,7 +173,20 @@ S1 半按调用 `Camera.autoFocus`，`UiView` 在取景中央绘制四角框：�
 
 ## 9. 日志与隐私
 
-Sony 相机通过 FUSE 层访问存储卡，只接受 DOS 8.3 文件名。日志目录 `FSNEX6`、文件 `FSLOG.TXT`，依次尝试：
+Sony 相机通过 FUSE 层访问存储卡，只接受 DOS 8.3 文件名，且不允许同时读写同一个文件。因此 `Log8` 用两个文件：
+
+- `FSLOG.TXT`：运行期间逐行追加的日志。文件一直被打开追加，应用存活时从外部读回会是全 NUL；它的作用是崩溃残留。
+- `REPORT.TXT`：退出（`onDestroy`）或崩溃时，把内存环形缓冲（最近 600 行）一次性写入一个全新文件，`flush` + `getFD().sync()` 后立即关闭、不再打开。快照在写入前先记一条 `EXPORT`，因此文件末尾能看到 `END app` → `EXPORT <路径>`，自证导出完成。同一进程内再次打开应用时，缓冲会保留上一次会话的行，`REPORT.TXT` 因而包含最近几次启动的记录（上限 600 行）。
+
+**卡上文件不是唯一通道。** 0.2.13 的 `REPORT.TXT` 在 Android 37 模拟器上读回为纯文本（0 个 NUL），但两次从真实 NEX-6 经相机 USB/MTP 复制出来的 `REPORT.TXT` 和 `FSLOG.TXT` 都是 100% NUL，文件大小正常且 `FSLOG` 持续增长，说明写入确实发生，问题在读取/传输路径或 FUSE 回写上。因此 0.2.14 增加三条自证渠道：
+
+- **屏内日志**：内存环形缓冲由 `UiView` 直接绘制，DISP 打开，上/下翻页，不经过存储卡；
+- **回读探针**：启动时 `PROBE` 回读上次的 `REPORT.TXT`/`FSLOG.TXT`，导出关闭后立即回读并写 `EXPORT-VERIFY`，输出 `size/head/zero/text/other`；
+- **路径日志**：`PATH` 记录最终选中的日志路径。
+
+若 `text=0`，应把存储卡取出用读卡器直接复制 `FSNEX6/REPORT.TXT`，不要依赖相机 USB/MTP 或电脑临时目录。
+
+日志目录 `FSNEX6`、追加文件 `FSLOG.TXT`，依次尝试：
 
 ```text
 Environment.getExternalStorageDirectory()/FSNEX6/FSLOG.TXT
@@ -174,7 +198,7 @@ Environment.getExternalStorageDirectory()/FSNEX6/FSLOG.TXT
 /sdcard/FSLOG.TXT        （仅目录创建失败时的最后回退）
 ```
 
-主要事件：`START`、`BODY`、`RESUME`、`OPEN`、`CAP`、`PREVIEW`、`ORIGINAL`、`APPLY`、`DROPPED`、`STYLE`、`SHOOT`、`SAVED`、`FOCUS`、`UI`、`KEY`、`KEYUP`、`FONT`、`RESTORE`、`EXIT`、`PAUSE`、`ALIVE`、`CRASH`。
+`REPORT.TXT` 写在选中的 `FSLOG.TXT` 所在目录。主要事件：`START`、`PATH`、`BODY`、`RESUME`、`OPEN`、`CAP`、`PREVIEW`、`ORIGINAL`、`APPLY`、`DROPPED`、`STYLE`、`EFFECT`、`MONO`、`PROBE`、`SHOOT`、`SAVED`、`FOCUS`、`UI`、`KEY`、`KEYUP`、`FONT`、`RESTORE`、`EXIT`、`PAUSE`、`EXPORT`、`EXPORT-VERIFY`、`ALIVE`、`CRASH`。
 
 - `BODY` 只记录机型、固件、平台和 Android 版本，不记录序列号。
 - 不记录 IP 地址、照片内容或用户隐私。

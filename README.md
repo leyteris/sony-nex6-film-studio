@@ -4,26 +4,27 @@
 
 面向 **Sony NEX-6** 的独立、非官方胶片风格应用。它把 Film Studio 的 15 个风格用 NEX-6 支持的运行时相机参数实现，在实时取景上叠加自绘控制界面，并在退出时恢复相机原始参数。
 
-> **当前状态：`0.2.12-alpha`（versionCode 14），尚未在 NEX-6 实机上安装或运行。** 已完成构建、API 10 静态验收和 Android 37 模拟器冒烟测试；`camera_tested=false`。在取得实机证据前，本项目不声称兼容或可用。
+> **当前状态：`0.2.16-alpha`（versionCode 18），尚未取得可用的 NEX-6 实机日志证据。** 0.2.13 已在 NEX-6 上启动并写卡，但回传的 `REPORT.TXT`/`FSLOG.TXT` 经 MTP 复制后全是 NUL。0.2.15 的实机反馈确认了一个关键前提：拨盘在 iAuto / SCN 时黑白风格仍出彩色，转到 P 后正常——这两种自动模式由相机接管创意风格与照片效果。0.2.16 因此在完整面板底部右侧加入橙色 `P/A/S/M:风格` 提示，并保持 0.2.15 的黑白双路径。本版已完成构建、API 10 静态验收和 Android 37 模拟器冒烟测试；`camera_tested=false`。在取得实机证据前，本项目不声称兼容或可用。
 
 ## 项目边界
 
 - **目标机型**：Sony NEX-6，固件 1.03，Android 2.3.7 / API 10。
 - **独立应用**：包名 `com.filmstudio.nex6`，可与旧的 a5100 Film Studio 并存安装。
-- **仅静态照片**：没有录像界面；PLAY、DISP、MOVIE 键被忽略。
+- **仅静态照片**：没有录像界面；PLAY、MOVIE 键被忽略，DISP 用于开关屏内日志。
 - **运行时参数**：只写 `Camera.Parameters`，退出或暂停时恢复；不改固件、不写相机设置存储、不做初始化。
 - **参数级近似**：NEX-6 没有矩阵/Gamma 或 3D LUT 通道，观感不会与 a5100 版逐像素一致。
 
 ## 功能
 
-- 15 个风格（10 个富士参考、5 个理光参考），4 档强度（30 / 50 / 70 / 100%）。
-- 左右键或拨轮切换风格，上下键切换强度，取景实时变化。
+- 15 个风格（10 个富士参考、5 个理光参考），4 档强度（30 / 50 / 70 / 100%）。**使用前请把模式拨盘置于 P / A / S / M**：iAuto 与 SCN 由相机接管风格，黑白会出彩色。
+- 黑白风格（ACROS / HCBW / MORI）同时写创意风格 `mono` 和单色照片效果（`richtone-mono` / `rough-mono`）：一路被固件丢弃时另一路仍可产生灰阶，写入后两路都回读并显示在右上角 `CM … FX …`。
+- 完整面板底部右侧常驻橙色 `P/A/S/M:风格` 提示；左右键或拨轮切换风格，上下键切换强度，取景实时变化。
 - 三阶段界面：完整面板 → 左下角小胶囊 → 仅取景；DELETE 或 SK2 循环切换。
 - 简体中文、繁体中文、英文界面，跟随系统语言；内置 Noto Sans 简/繁子集，解决固件无中日韩字形的问题。
 - S1 半按自动对焦，取景中央显示应用自绘的对焦框（白=搜索、绿=合焦、红=失败）。
 - 中央键或快门拍摄；拍后检查 `DCIM` 是否出现新 JPEG，并写入日志。
 - 上次使用的风格和强度会在下次启动时恢复。
-- 卡上日志 `/sdcard/FSNEX6/FSLOG.TXT`，不含 IP 地址或序列号。
+- 卡上诊断快照 `/sdcard/FSNEX6/REPORT.TXT`（退出/崩溃时生成，可读），不含 IP 地址或序列号。
 
 ## 界面预览
 
@@ -57,7 +58,8 @@ PMCA（PlayMemories Camera Apps）是安装本应用所需的机内平台。安�
 | DELETE / SK2 | 界面阶段循环（完整 → 胶囊 → 隐藏） |
 | MENU / SK1 | 恢复参数并退出 |
 | BACK | 恢复参数并退出 |
-| PLAY / DISP / MOVIE | 忽略 |
+| DISP | 打开 / 关闭屏内日志；日志打开时上下翻页，BACK 关闭 |
+| PLAY / MOVIE | 忽略 |
 
 ## 15 个风格
 
@@ -89,11 +91,11 @@ PMCA（PlayMemories Camera Apps）是安装本应用所需的机内平台。安�
 2. 相机已启用 Wi-Fi ADB（Sony-PMCA-RE / OpenMemories: Tweak）；
 3. 电脑已安装 Android Platform-Tools。
 
-在 Releases 页面下载 `FilmStudioNex6-0.2.12-alpha.apk`（发布后），或使用本地构建产物 `output/FilmStudioNex6-0.2.12-alpha.apk`，然后：
+在 Releases 页面下载 `FilmStudioNex6-0.2.16-alpha.apk`（发布后），或使用本地构建产物 `output/FilmStudioNex6-0.2.16-alpha.apk`，然后：
 
 ```sh
 adb connect CAMERA_IP:5555
-adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.12-alpha.apk
+adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.16-alpha.apk
 ```
 
 `CAMERA_IP` 只是占位符，必须替换为相机当前显示的地址，并保留 `:5555` 端口。分享截图或日志时请遮住真实 IP。
@@ -101,7 +103,7 @@ adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.12-alpha.apk
 当前构建的 SHA-256：
 
 ```text
-51889474607a71f8b2f0db1ad2aab74f924d6db7c50a72bfaa2a5df0d2f2e349
+5cc4e4da07772b87de8a177f3c76fe567cdd2d328c1b2e635fd728bf69013001
 ```
 
 完整步骤、首次检查项、日志取回和故障排查见 **[中文安装教程](docs/INSTALL.zh-CN.md)**。
@@ -110,21 +112,28 @@ adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.12-alpha.apk
 
 ## 日志
 
-应用把诊断信息写入存储卡：
+诊断信息优先看相机屏幕：按 **DISP** 打开屏内日志（内存中最近 600 行），上下键翻页，再按 DISP 或 BACK 关闭，MENU 仍为退出。它不依赖存储卡读取，是当前唯一可靠的通道；把 `PROBE`、`STYLE`、`DROPPED` 等行拍照发给开发者即可。
+
+![DISP 屏内日志（模拟器）](docs/images/log-overlay.png)
+
+> 上图来自 Android 37 模拟器，用于说明叠加层样式，不是 NEX-6 实机画面。
+
+应用同时仍向存储卡写两个文件：
 
 ```text
-/sdcard/FSNEX6/FSLOG.TXT
+/sdcard/FSNEX6/REPORT.TXT   退出或崩溃时一次性写入并关闭的快照
+/sdcard/FSNEX6/FSLOG.TXT    运行期间的追加日志（崩溃残留）
 ```
 
-目录和文件名都满足 Sony FUSE 的 DOS 8.3 限制。若目录创建失败，才回退到卡根 `FSLOG.TXT`。日志包含机型、固件、预览尺寸、按键扫描码、参数应用/丢弃、拍摄、落卡检查、对焦结果和异常；**不记录 IP 地址、序列号或照片内容**。
+目录和文件名满足 Sony FUSE 的 DOS 8.3 限制。NEX-6 实机回传的两份文件经由 MTP / 远程桌面复制后都是全 NUL，所以“文件可读”尚未被实机确认；0.2.14 起会在启动时回读上一轮文件并写入 `PROBE size=… zero=… text=…`，导出后也立即回读一次。若 `PROBE` 显示 `text=0`，请改用**读卡器**直接从 SD 卡取出 `FSNEX6/REPORT.TXT`。同一进程内多次打开应用时，`REPORT.TXT` 会累积最近几次会话（上限 600 行）。日志包含机型、固件、预览尺寸、按键扫描码、参数应用/丢弃、创意风格与照片效果回读（`CM … FX …`）、拍摄、落卡检查、对焦结果和异常；**不记录 IP 地址、序列号或照片内容**。
 
-取回方式：
+取回方式（先正常退出应用，让 `REPORT.TXT` 生成）：
 
 ```sh
-adb -s CAMERA_IP:5555 pull /sdcard/FSNEX6/FSLOG.TXT
+adb -s CAMERA_IP:5555 pull /sdcard/FSNEX6/REPORT.TXT
 ```
 
-如果文件是全 NUL 或内容不完整，先退出应用再拉取，或在相机上把文件压缩成 zip 后传输。
+如果 `REPORT.TXT` 不存在或是全 NUL，用读卡器直接读 SD 卡上的同一路径，不要依赖 MTP 复制。
 
 ## 构建
 
@@ -134,7 +143,7 @@ adb -s CAMERA_IP:5555 pull /sdcard/FSNEX6/FSLOG.TXT
 python3 tools/build.py
 ```
 
-产物写入 `output/FilmStudioNex6-0.2.12-alpha.apk`，同时生成 `validation/FilmStudioNex6-0.2.12-alpha.json`。签名默认使用本地 `.private/signing.pem`；该文件不提交、不上传。缺失时脚本会用一次性调试密钥签名，签名不同，不能覆盖安装已发布版本。
+产物写入 `output/FilmStudioNex6-0.2.16-alpha.apk`，同时生成 `validation/FilmStudioNex6-0.2.16-alpha.json`。签名默认使用本地 `.private/signing.pem`；该文件不提交、不上传。缺失时脚本会用一次性调试密钥签名，签名不同，不能覆盖安装已发布版本。
 
 GitHub Actions（[.github/workflows/build.yml](.github/workflows/build.yml)）会在 push 和 PR 时执行 API 10 编译门并构建 APK，产物作为 workflow artifact 下载。CI 不持有签名私钥，因此 artifact 是调试签名，只用于测试，不能覆盖安装本地构建或正式版本。
 
@@ -163,6 +172,7 @@ inputs/         本地工具链与第三方输入（Git 忽略）
 ## 已知限制
 
 - 尚未实机验证；无法确认取景、拍摄、落卡、对焦回调和退出恢复在 NEX-6 上的实际行为。
+- **模式拨盘必须在 P / A / S / M**：iAuto 与 SCN 由相机接管创意风格和照片效果，黑白等风格不会生效；完整面板右下角会常驻 `P/A/S/M:风格` 提示。
 - 参数级近似，不是 a5100 版的矩阵/Gamma 或 LUT 移植。
 - 风格只在应用运行期间生效；退出后原生相机不带风格。
 - 某些机身可能丢弃色温、微调或 DRO 参数，应用会回退到核心参数并记录 `DROPPED`。

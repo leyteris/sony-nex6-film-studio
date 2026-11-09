@@ -1,5 +1,40 @@
 # 版本历史
 
+## 0.2.16-alpha — 2026-11-09
+
+- 完整面板底部提示行右侧新增右对齐的橙色模式提示：简体 `P/A/S/M:风格`、繁体 `P/A/S/M:風格`、英文 `P/A/S/M: STYLE`，与左侧按键提示同一基线；胶囊和隐藏阶段不显示；
+- 原因：用户在 NEX-6 实机上确认 0.2.15 的黑白风格在 iAuto / SCN 下仍出彩色，拨盘转到 P 后正常——两种自动模式由相机接管创意风格和照片效果；提示用于避免把拨盘位置误判为应用缺陷；
+- 只改界面提示与版本号，取景、参数应用、黑白双路径和日志逻辑与 0.2.15 相同；
+- 提示复用已有字形 `风`/`風`/`格`，SC/TC 字体子集无需重新生成，字体字节不变；
+- Manifest 升至 `0.2.16-alpha` / versionCode 18；`tools/build.py`、CI 产物名与 `validation/` 同步；
+- 模拟器验证（简体中文）：22 个 class、35 个 `android.*` 类型、0 缺失、dex 035、v1 签名；640×480 下右下角 `P/A/S/M:风格` 完整、无重叠、无豆腐块；DISP 日志、MENU 退出与导出回读通过（单次会话 `REPORT.TXT` 1,089 字节、25 行、0 个 NUL；两次会话连续存放 2,168 字节时 `EXPORT-VERIFY size=2168 head=2168 zero=0 text=2118 other=50`）；`camera_tested=false`。
+
+## 0.2.15-alpha — 2026-11-09
+
+- 重做黑白风格：ACROS/HCBW/MORI 现在同时写 `color-mode=mono` 和单色照片效果（ACROS 为 `richtone-mono`，HCBW/MORI 为 `rough-mono`），只要一路被固件保留，成片就应为灰阶；
+- `Cam` 按固件公布的 `picture-effect-values` 解析别名（`richtone-mono` / `rich-tone-monochrome`、`rough-mono` / `high-contrast-mono` 等写法），两值都回读；若都不是单色，先单独重试 `color-mode`（轮换全部 `mono` 别名），仍失败再单独重试效果；
+- 右上角诊断改为 `CM <color-mode> FX <picture-effect>`；新增 `CAP picture-effect=…`、`EFFECT`（别名解析）与 `MONO`（重试结论）日志，一次实机拍摄即可判断哪条路径被接受；
+- 已知取舍：照片效果开启时 Sony 忽略创意风格及其滑块，黑白强度可能不再改变对比；为保证灰阶接受该代价，待实机确认；
+- 映射参考 Recipe Lab 的 `STYLE_NAMES=mono`、`PE_KEYS=richtone-mono/rough-mono`；HCBW 选 `rough-mono` 是按高反差语义，与参考项目 `Chai-Yu/sony-a7r2-film-studio` 的 HCBW 映射不完全相同；
+- 模拟器验证：22 个 class、35 个 `android.*` 类型、0 缺失、dex 035、v1 签名；ACROS/HCBW/MORI 分别显示 `CM mono FX richtone-mono` / `rough-mono`，DISP 日志、MENU 退出与导出回读通过（`REPORT.TXT` 2,027 字节、39 行、0 个 NUL；`EXPORT-VERIFY zero=0 text=1988`）；`camera_tested=false`。
+
+## 0.2.14-alpha — 2026-11-09
+
+- 新增屏内日志：按 DISP 在相机屏上显示内存中最近 600 行，上/下翻页，再按 DISP 或 BACK 关闭，MENU 仍退出；不依赖存储卡，回传诊断只需拍照；
+- `Log8` 新增启动回读探针 `PROBE`（上一轮 `REPORT.TXT`/`FSLOG.TXT` 的 `size/head/zero/text/other`）与导出后立即回读的 `EXPORT-VERIFY`，并记录最终日志路径 `PATH`；
+- 实机回传的两份 NEX-6 日志（2,853 B / 21,562 B）经相机 USB/MTP 与远程桌面复制后均为 100% NUL，文件大小正常且 `FSLOG` 持续增长；0.2.14 的回读探针用于区分“卡上就是 NUL”和“读取路径有问题”，`text=0` 时改用读卡器；
+- 修复黑白风格显示为彩色：不再把固件未列出的 `color-mode` 值降级为 `standard`（Sony 对未知值是静默忽略），改为发送目标值并支持 `mono`/`bw` 等别名，写入后回读，不一致时单独重试一次；右上角显示实际值 `CM mono` / `CM standard want mono`；
+- 字体子集加入新的日志提示用字“关闭翻页”/“關閉翻頁”，重新生成 SC/TC 子集；
+- 模拟器验证：22 个 class、35 个 `android.*` 类型、0 缺失、dex 035、v1 签名；DISP 叠加层、翻页、关闭、MENU 退出、`REPORT.TXT` 回读（0 个 NUL）与 `EXPORT-VERIFY` 均通过；`camera_tested=false`。
+
+## 0.2.13-alpha — 2026-11-09
+
+- 修复卡上日志读回全 NUL 的问题：Sony FUSE 不允许同时读写同一文件，运行期间一直追加的 `FSLOG.TXT` 在应用存活时无法读取；
+- `Log8` 新增最近 600 行的内存环形缓冲，退出（`onDestroy`）或崩溃时把缓冲一次性写入全新文件 `FSNEX6/REPORT.TXT`，`flush` + `getFD().sync()` 后立即关闭、不再打开；这种“写完即关”的新文件在 Sony FUSE 上可读（同一做法已由 LUT Camera 在 A6300 实机验证）；快照写入前先记 `EXPORT`，文件末尾可见 `END app` → `EXPORT <路径>`；
+- `FSLOG.TXT` 保留为运行期间的追加日志/崩溃残留；诊断取回改用 `REPORT.TXT`；
+- 新增 `EXPORT` 日志事件；不新增界面文案，字体子集不变；
+- 静态验收 21 个 class、35 个 `android.*` 类型、0 缺失、dex 035、v1 签名；`camera_tested=false`。
+
 ## Unreleased — 仓库重组
 
 - 目录改为 NEX-6 单一项目：`app/`、`docs/`、`tools/`、`validation/`；
