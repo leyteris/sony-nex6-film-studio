@@ -221,6 +221,11 @@ final class UiView extends View {
         paint.setColor(DIM);
         paint.setTextSize(size(h, 0.021f));
         c.drawText(Lang.hints(), pad, hintBaseline, paint);
+
+        paint.setColor(WARN);
+        paint.setTextAlign(Paint.Align.RIGHT);
+        c.drawText(Lang.modeHint(), w - pad, hintBaseline, paint);
+        paint.setTextAlign(Paint.Align.LEFT);
         }
 
         drawFocus(c, w, h);

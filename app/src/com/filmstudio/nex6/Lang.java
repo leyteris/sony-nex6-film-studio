@@ -68,6 +68,14 @@ final class Lang {
         return "LEFT/RIGHT: look  UP/DOWN: strength  CENTER: shoot  DEL: UI  MENU: exit";
     }
 
+    /** The dial stays on P/A/S/M: iAuto and SCN hand the look back to the
+     *  camera, which drops Creative Style and Picture Effect. */
+    static String modeHint() {
+        if (SCRIPT == SC) return "P/A/S/M:风格";
+        if (SCRIPT == TC) return "P/A/S/M:風格";
+        return "P/A/S/M: STYLE";
+    }
+
     static String captured() {
         if (SCRIPT == SC) return "已拍摄";
         if (SCRIPT == TC) return "已拍攝";
