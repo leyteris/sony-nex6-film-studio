@@ -3,6 +3,7 @@ name: Build APK
 on:
   push:
     branches: [main]
+    tags: ['*']
   pull_request:
   workflow_dispatch:
 
@@ -50,14 +51,55 @@ jobs:
         run: python3 tools/build.py
 
       - name: Record SHA-256
-        run: sha256sum output/FilmStudioNex6-0.2.16-alpha.apk | tee output/SHA256SUMS.txt
+        working-directory: output
+        run: sha256sum FilmStudioNex6-0.2.16-alpha.apk | tee SHA256SUMS.txt
+
+      - name: Stage release files
+        run: |
+          mkdir -p dist
+          cp output/FilmStudioNex6-0.2.16-alpha.apk dist/
+          cp output/SHA256SUMS.txt dist/
+          cp validation/FilmStudioNex6-0.2.16-alpha.json dist/
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: FilmStudioNex6-0.2.16-alpha-debug-signed
-          path: |
-            output/FilmStudioNex6-0.2.16-alpha.apk
-            output/SHA256SUMS.txt
-            validation/FilmStudioNex6-0.2.16-alpha.json
+          path: dist/
           if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: FilmStudioNex6-0.2.16-alpha-debug-signed
+          path: dist
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > "$RUNNER_TEMP/release-notes.md" <<EOF
+          Experimental Sony NEX-6 build from tag ${GITHUB_REF_NAME}.
+
+          - Version: 0.2.16-alpha (versionCode 18), Android 2.3.7 / API 10
+          - camera_tested=false: nothing has been validated on a real camera; see docs/VALIDATION.md
+          - Keep the mode dial on P/A/S/M; iAuto and SCN let the camera override Creative Style and Picture Effect
+          - Use DISP for the on-body log; card logs may read back as all NUL over USB/MTP
+
+          CI signs this APK with a throwaway debug key, so it cannot update over a
+          locally signed build and its SHA-256 differs from the one in the docs.
+          Check SHA256SUMS.txt for this file.
+          EOF
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --prerelease \
+            --title "Film Studio NEX-6 0.2.16-alpha (CI debug build)" \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
+            dist/*.apk dist/SHA256SUMS.txt dist/*.json
