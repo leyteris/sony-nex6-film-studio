@@ -50,14 +50,14 @@ jobs:
         run: python3 tools/build.py
 
       - name: Record SHA-256
-        run: sha256sum output/FilmStudioNex6-0.2.12-alpha.apk | tee output/SHA256SUMS.txt
+        run: sha256sum output/FilmStudioNex6-0.2.16-alpha.apk | tee output/SHA256SUMS.txt
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: FilmStudioNex6-0.2.12-alpha-debug-signed
+          name: FilmStudioNex6-0.2.16-alpha-debug-signed
           path: |
-            output/FilmStudioNex6-0.2.12-alpha.apk
+            output/FilmStudioNex6-0.2.16-alpha.apk
             output/SHA256SUMS.txt
-            validation/FilmStudioNex6-0.2.12-alpha.json
+            validation/FilmStudioNex6-0.2.16-alpha.json
           if-no-files-found: error
