@@ -74,6 +74,12 @@ final class Lang {
         return "CAPTURED";
     }
 
+    static String logHint() {
+        if (SCRIPT == SC) return "DISP:关闭  上下:翻页";
+        if (SCRIPT == TC) return "DISP:關閉  上下:翻頁";
+        return "DISP: close   UP/DOWN: scroll";
+    }
+
     /** Full look name for the top bar. English keeps the existing tag + name. */
     static String lookName(Looks.Look look) {
         if (SCRIPT == EN) return look.tag + "  " + look.name;

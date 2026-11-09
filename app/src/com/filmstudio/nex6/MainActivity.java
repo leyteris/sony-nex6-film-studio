@@ -138,10 +138,18 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             public void uncaughtException(Thread th, Throwable t) {
                 Log8.event("CRASH", Log8.stack(t));
+                Log8.export();
                 if (was != null) was.uncaughtException(th, t);
             }
         });
         updateUi();
+        // Read back what the previous session wrote before this one touches the
+        // files; the verdict shows up as PROBE lines in the DISP overlay.
+        handler.post(new Runnable() {
+            public void run() {
+                Log8.probe();
+            }
+        });
     }
 
     @Override
@@ -182,6 +190,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
     @Override
     protected void onDestroy() {
         Log8.event("END", "app");
+        Log8.export();
         super.onDestroy();
     }
 
@@ -218,6 +227,17 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         if (sc == 0) sc = fallback(keyCode);
         boolean repeat = e.getRepeatCount() > 0;
         logScan(sc, keyCode, repeat, true);
+
+        if (ui != null && ui.isLogOpen()) {
+            if (sc == K_UP) {
+                ui.scrollLog(repeat ? 3 : 1);
+            } else if (sc == K_DOWN) {
+                ui.scrollLog(repeat ? -3 : -1);
+            } else if (keyCode == KeyEvent.KEYCODE_BACK) {
+                ui.closeLog();
+            }
+            return true;                       // MENU still exits on its release
+        }
 
         if (sc == K_MENU || sc == K_SK1) {
             return true;                       // exit waits for the release, as the app framework expects
@@ -271,6 +291,20 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         int sc = e.getScanCode();
         if (sc == 0) sc = fallback(keyCode);
         logScan(sc, keyCode, false, false);
+
+        if (ui != null && ui.isLogOpen()) {
+            if (sc == K_MENU || sc == K_SK1) {
+                exitApp();
+            } else if (sc == K_DISP || keyCode == KeyEvent.KEYCODE_BACK) {
+                ui.closeLog();
+            }
+            return true;
+        }
+        if (sc == K_DISP) {
+            ui.showLog(Log8.tail(Log8.MAX_LINES));
+            return true;
+        }
+
         if (sc == K_MENU || sc == K_SK1) {
             exitApp();
             return true;
@@ -328,6 +362,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
             case KeyEvent.KEYCODE_FOCUS: return K_S1;
             case KeyEvent.KEYCODE_DEL: return K_DELETE;
             case 112: return K_DELETE;         // KEYCODE_FORWARD_DEL, API 11+, not in the API 10 stub
+            case 165: return K_DISP;           // KEYCODE_INFO, API 11+, emulator-only path to the log
             default: return 0;
         }
     }
@@ -416,7 +451,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
     }
 
     private void updateUi() {
-        if (ui != null) ui.setState(lookIndex, strengthIndex, status);
+        if (ui != null) ui.setState(lookIndex, strengthIndex, status, cam.lastNote());
     }
 
     /** A JPEG that was not on the card before the shutter, as "name size", or

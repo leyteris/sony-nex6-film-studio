@@ -32,8 +32,11 @@ final class UiView extends View {
     private int mode = MODE_FULL;
     private int focusState = FOCUS_OFF;
     private String status = "";
+    private String diag = "";
     private String flash = "";
     private long flashUntil;
+    private String[] logLines;
+    private int logScroll;
 
     UiView(Context context) {
         super(context);
@@ -41,10 +44,34 @@ final class UiView extends View {
         paint.setTypeface(Lang.typeface(context));
     }
 
-    void setState(int lookIndex, int strength, String status) {
+    void setState(int lookIndex, int strength, String status, String diagText) {
         index = lookIndex;
         strengthIndex = strength;
         this.status = status == null ? "" : status;
+        diag = diagText == null ? "" : diagText;
+        invalidate();
+    }
+
+    /** Opens the in-memory log over the live view. The card files are only a
+     *  best effort on Sony FUSE, so the body's own screen is the fallback. */
+    void showLog(String[] lines) {
+        logLines = lines == null ? new String[0] : lines;
+        logScroll = 0;
+        invalidate();
+    }
+
+    void closeLog() {
+        logLines = null;
+        invalidate();
+    }
+
+    boolean isLogOpen() {
+        return logLines != null;
+    }
+
+    void scrollLog(int by) {
+        logScroll += by;
+        if (logScroll < 0) logScroll = 0;
         invalidate();
     }
 
@@ -99,6 +126,12 @@ final class UiView extends View {
         paint.setColor(DIM);
         paint.setTextSize(small);
         c.drawText(look.paramLine(), size(w, 0.022f), topH * 0.86f, paint);
+
+        if (diag.length() > 0) {
+            paint.setTextAlign(Paint.Align.RIGHT);
+            c.drawText(diag, w - size(w, 0.022f), topH * 0.86f, paint);
+            paint.setTextAlign(Paint.Align.LEFT);
+        }
 
         if (status.length() > 0) {
             paint.setColor(WARN);
@@ -204,6 +237,47 @@ final class UiView extends View {
             paint.setTextAlign(Paint.Align.CENTER);
             c.drawText(flash, w / 2f, rect.centerY() + fs * 0.36f, paint);
         }
+
+        if (logLines != null) drawLog(c, w, h);
+    }
+
+    /** Full-screen text view of the bounded in-memory log, newest at the bottom. */
+    private void drawLog(Canvas c, int w, int h) {
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(0xF2000000);
+        c.drawRect(0, 0, w, h, paint);
+
+        int pad = size(w, 0.012f);
+        int fs = size(h, 0.021f);
+        int lineH = Math.max(fs + 2, (int) (fs * 1.45f));
+        int rows = Math.max(1, (h - pad * 2 - lineH) / lineH);
+        int n = logLines.length;
+        int maxScroll = Math.max(0, n - rows);
+        if (logScroll > maxScroll) logScroll = maxScroll;
+        if (logScroll < 0) logScroll = 0;
+        int end = n - logScroll;
+        int start = Math.max(0, end - rows);
+
+        paint.setTextSize(fs);
+        paint.setColor(ACCENT);
+        paint.setTextAlign(Paint.Align.LEFT);
+        c.drawText("LOG " + n + "  " + (n == 0 ? 0 : start + 1) + "-" + end, pad, pad + fs, paint);
+        paint.setTextAlign(Paint.Align.RIGHT);
+        c.drawText(Lang.logHint(), w - pad, pad + fs, paint);
+        paint.setTextAlign(Paint.Align.LEFT);
+
+        float y = pad + lineH + fs;
+        for (int i = start; i < end; i++) {
+            paint.setColor(logColor(logLines[i]));
+            c.drawText(logLines[i], pad, y, paint);
+            y += lineH;
+        }
+    }
+
+    private static int logColor(String line) {
+        if (line.indexOf("FAIL") >= 0 || line.indexOf("DROPPED") >= 0) return WARN;
+        if (line.indexOf("PROBE") >= 0 || line.indexOf("EXPORT") >= 0) return ACCENT;
+        return 0xFFE4E4E4;
     }
 
     /** The body's own AF point is not exposed to PMCA apps, so this is an
