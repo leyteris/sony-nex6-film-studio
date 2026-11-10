@@ -1,5 +1,14 @@
 # 版本历史
 
+## 0.2.18-alpha — 2026-11-10
+
+- 修复白平衡写入 bug：带色温的风格此前把 `color-temperture-white-balance` 写成 K×100（`5600` → `560000`），远超 Sony 2500–9900 的合法范围，固件行为不可预测；用户实机反馈 `CHROME`/`GR-` 明显偏黄、`CNEG` 明显偏蓝，与此一致；
+- 对齐 a5100 上游「滤镜不会锁定白平衡」：17 个风格一律写 `whitebalance=auto`，不再写色温；`CHROME`/`GR-` 改为 AWB + A-B `+1`，`CNEG`/`CROSS` 改为 AWB + A-B `+2`（琥珀为正，直接写入并回读，被固件丢弃则记 `DROPPED`）；
+- 顶部参数行由 `5600K A+1` 变为 `AWB A+1`；低强度对 A-B 的线性缩放不变；删除 `wb`/`kelvin` 字段与色温写入路径，用户自己的色温参数仍随原参数捕获并在退出时恢复；界面文案不变，字体子集字节不变；
+- Manifest 升至 `0.2.18-alpha` / versionCode 20；`tools/build.py`、CI 产物名、README、安装文档与 `validation/` 同步；
+- 构建与验证：`42c80337…c44d`、81,094 B、11 个 APK 条目、v1 签名；22 个 class、35 个 `android.*` 类型、0 缺失、dex 035；Android 37 模拟器（简体中文，640×480）确认 `CHROME` 参数行 `NEUTRAL S-1 C+1 R+0 AWB A+1 DRO auto`，日志 `APPLY CHROME 30/50/70/100% neutral cm=neutral`、`APPLY CNEG 100% neutral cm=neutral`，全程无 `color-temperture-white-balance` 写入与 `SET-` 失败，MENU 退出 `RESTORE ok`，`REPORT.TXT` 3,080 字节、72 行、0 个 NUL；
+- 已知：`camera_tested=false`；偏色修复效果等待用户实机复验，A-B 偏移是否被固件保留也需实机确认。
+
 ## 0.2.17-alpha — 2026-11-09
 
 - 新增两个徕卡参考 Look：`LEICA-C`（徕卡 经典 / Leica Look Classic）与 `LEICA-N`（徕卡 自然 / Leica Look Natural），风格总数 15 → 17；

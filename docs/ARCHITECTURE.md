@@ -1,6 +1,6 @@
 # 架构与实现：Film Studio NEX-6
 
-状态：`0.2.17-alpha` 独立外壳已实现，静态验收和模拟器冒烟测试通过；0.2.13 已在用户的 NEX-6 上启动并写卡，但回传日志全 NUL，**各项行为在实机上均未验证**（`camera_tested=false`）。用户在 0.2.15 实机上确认：拨盘在 iAuto / SCN 时黑白出彩色，P/A/S/M 下正常——0.2.16 因此加入底部 `P/A/S/M` 提示。0.2.17 增加两个徕卡参考 Look（经典、自然），风格总数为 17。目标机型为 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。
+状态：`0.2.18-alpha` 独立外壳已实现，静态验收和模拟器冒烟测试通过；0.2.13 已在用户的 NEX-6 上启动并写卡，但回传日志全 NUL，**各项行为在实机上均未验证**（`camera_tested=false`）。用户在 0.2.15 实机上确认：拨盘在 iAuto / SCN 时黑白出彩色，P/A/S/M 下正常——0.2.16 因此加入底部 `P/A/S/M` 提示。0.2.17 增加两个徕卡参考 Look（经典、自然），风格总数为 17。0.2.18 修复色温写入越界（曾把 K×100 发给相机），风格不再锁色温，改为 AWB + A-B 微调。目标机型为 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。
 
 > **English summary.** Film Studio NEX-6 is a standalone PMCA app for the first-generation Sony NEX-6. The a5100 Film Studio engine depends on `CameraEx.setRGBMatrix` and the extended gamma table, which the NEX-6 firmware does not expose. This app therefore keeps the Film Studio look list but expresses each look with runtime `Camera.Parameters` the NEX-6 does accept. It is a plain `Activity` + `SurfaceView` + hand-drawn `Canvas` overlay, with every Sony class reached through reflection. It is an approximation, not a LUT or matrix/gamma port.
 
@@ -42,9 +42,9 @@ native_color_preview_available: false
 | 对比度 | `contrast` | -3..+3 |
 | 饱和度 | `saturation` | -3..+3 |
 | 锐度 | `sharpness` | -3..+3 |
-| 白平衡 | `whitebalance` | auto / color-temp |
-| 色温 | `color-temperture-white-balance` | K × 100（Sony 固件拼写就是 `temperture`） |
-| 白平衡微调 | `light-balance-for-white-balance`（A-B）<br>`color-compensation-for-white-balance`（G-M） | -7..+7；相机以洋红为正 |
+| 白平衡 | `whitebalance` | auto（0.2.18 起风格不锁色温） |
+| 色温 | `color-temperture-white-balance` | 真实 K，如 `4000`（Sony 固件拼写就是 `temperture`）；风格不再写该键，仅随原参数捕获与恢复 |
+| 白平衡微调 | `light-balance-for-white-balance`（A-B）<br>`color-compensation-for-white-balance`（G-M） | -7..+7；相机以琥珀为正（A-B）、以洋红为正（G-M），表内绿为正、写入取反 |
 | DRO | `dro-mode` / `dro-level` | off / auto / 1..5 |
 | 图片效果 | `picture-effect` | off / richtone-mono / rough-mono（单色） |
 | 画质 | `storage-fmt` / `jpeg-quality` | jpeg；50 |
@@ -89,22 +89,22 @@ MainActivity (Activity)
 | 0 | PROVIA | Fuji PROVIA Standard | standard | +1 | 0 | 0 | AWB | auto |
 | 1 | VELVIA | Fuji Velvia Vivid | vivid | +2 | +1 | +1 | AWB | auto |
 | 2 | ASTIA | Fuji ASTIA Soft | portrait | 0 | -1 | -1 | AWB | auto |
-| 3 | CHROME | Fuji Classic Chrome | neutral | -1 | +1 | 0 | 5600K, A+1 | auto |
+| 3 | CHROME | Fuji Classic Chrome | neutral | -1 | +1 | 0 | AWB A+1 | auto |
 | 4 | REALA | Fuji REALA ACE | standard | +1 | +1 | 0 | AWB | auto |
 | 5 | PRONEG | Fuji PRO Neg. Std | neutral | -1 | -1 | 0 | AWB | auto |
-| 6 | CNEG | Fuji Classic Negative | neutral | -1 | +1 | 0 | 5400K, A+2 | auto |
+| 6 | CNEG | Fuji Classic Negative | neutral | -1 | +1 | 0 | AWB A+2 | auto |
 | 7 | ETERNA | Fuji ETERNA Cinema | neutral | -2 | -1 | -1 | AWB | auto |
 | 8 | BLEACH | Fuji ETERNA Bleach | neutral | -3 | +2 | +1 | AWB | off |
 | 9 | ACROS | Fuji ACROS Mono | mono | 0 | +1 | +1 | AWB | auto |
 | 10 | GR+ | Ricoh GR Positive | vivid | +1 | +1 | +1 | AWB | auto |
-| 11 | GR- | Ricoh Negative Film | neutral | -1 | +1 | 0 | 5600K, A+1 | auto |
+| 11 | GR- | Ricoh Negative Film | neutral | -1 | +1 | 0 | AWB A+1 | auto |
 | 12 | HCBW | Ricoh Hi-Contrast B&W | mono | 0 | +3 | +2 | AWB | off |
 | 13 | MORI | Ricoh Moriyama Mono | mono | 0 | +3 | +3 | AWB | off |
-| 14 | CROSS | Ricoh Cross Process | vivid | +3 | +2 | 0 | 5000K, A+2 | off |
+| 14 | CROSS | Ricoh Cross Process | vivid | +3 | +2 | 0 | AWB A+2 | off |
 | 15 | LEICA-C | Leica Look Classic | neutral | -1 | -1 | 0 | AWB | auto |
 | 16 | LEICA-N | Leica Look Natural | standard | 0 | 0 | 0 | AWB | auto |
 
-强度为 30% / 50% / 70% / 100%。以 100% 为完整值，低强度对饱和、对比、锐度和 A-B/G-M 做线性缩放并四舍五入；创意风格、色温和 DRO 档位不插值。黑白风格在低强度下仍是黑白；若单色 Picture Effect 生效，对比/锐度滑块可能被相机忽略，灰阶由效果本身决定。
+强度为 30% / 50% / 70% / 100%。以 100% 为完整值，低强度对饱和、对比、锐度和 A-B/G-M 做线性缩放并四舍五入；创意风格与 DRO 档位不插值。黑白风格在低强度下仍是黑白；若单色 Picture Effect 生效，对比/锐度滑块可能被相机忽略，灰阶由效果本身决定。
 
 ACROS 另写 `picture-effect=richtone-mono`；HCBW / MORI 写 `rough-mono`（高反差黑白）。
 
@@ -214,7 +214,7 @@ Environment.getExternalStorageDirectory()/FSNEX6/FSLOG.TXT
 | --- | --- | --- |
 | NEX-6 无矩阵/Gamma | 观感与 a5100 版不同 | 文档明确标注“参数级近似” |
 | `takePicture(null,null,null)` 未在实机确认 | 可能不保存 JPEG | 首轮实机测试项；`SAVED` 行给出结果 |
-| 风格名、色温或微调被固件丢弃 | 某风格无效 | 回读检测 + `DROPPED` + 核心参数降级 |
+| 风格名、微调或 DRO 被固件丢弃 | 某风格无效 | 回读检测 + `DROPPED` + 核心参数降级 |
 | 对焦框不是机身 AF 点 | 构图判断可能偏差 | UI 与文档均说明这是居中指示 |
 | 预览比例/方向 | 画面可能拉伸 | 沿用 Recipe Lab 的 SurfaceView 方案，实机再调 |
 | 退出后不保留风格 | 原生相机不带风格 | 拍摄请在应用内完成；写设置存储不在本版范围 |
