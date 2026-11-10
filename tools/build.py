@@ -20,8 +20,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / 'app'
 BUILD = ROOT / 'build-local/app'
-OUTPUT = ROOT / 'output/FilmStudioNex6-0.2.16-alpha.apk'
-VALIDATION = ROOT / 'validation/FilmStudioNex6-0.2.16-alpha.json'
+OUTPUT = ROOT / 'output/FilmStudioNex6-0.2.17-alpha.apk'
+VALIDATION = ROOT / 'validation/FilmStudioNex6-0.2.17-alpha.json'
 
 
 def sdk_root():
@@ -202,7 +202,8 @@ def main():
             'S1 draws an app-centered focus frame (white searching, green locked, red failed); it is not the camera AF point, which PMCA does not expose',
             'still images only; PLAY and MOVIE are swallowed; DISP shows the in-memory log overlay',
         ],
-        'looks': 15,
+        'looks': 17,
+        'look_families': {'fujifilm': 10, 'ricoh': 5, 'leica': 2},
         'strengths': [30, 50, 70, 100],
         'ui_modes': ['full', 'pill', 'hidden'],
         'ui_keys': ['delete (scan 595)', 'SK2 (scan 513)'],
