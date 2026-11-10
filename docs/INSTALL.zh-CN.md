@@ -2,7 +2,7 @@
 
 [项目首页](../README.md) · [English](INSTALL.en.md)
 
-本教程适用于 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。当前版本 `0.2.16-alpha` **尚未在实机上验证**；下面同时给出首轮检查项。日志优先用 DISP 在相机屏上查看，卡上的 `REPORT.TXT` 只作为补充。
+本教程适用于 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。当前版本 `0.2.17-alpha` **尚未在实机上验证**；下面同时给出首轮检查项。日志优先用 DISP 在相机屏上查看，卡上的 `REPORT.TXT` 只作为补充。
 
 > **不要**用相机的「设置 → 初始化」排查问题。CN2 预设会重新关闭「应用程序」入口，只能重新走解锁流程。解锁参数仅适用于 NEX-6 1.03 / `CX76001_CN2`，不得套用到其他机型或区域。
 
@@ -14,18 +14,18 @@
 - 已启用 Wi-Fi ADB 的相机（Sony-PMCA-RE / OpenMemories: Tweak）；
 - 电脑上的 [Android Platform-Tools / adb](https://developer.android.com/tools/releases/platform-tools)；
 - 充足电量、已备份的存储卡，以及可正常读写的 USB 连接；
-- APK：`FilmStudioNex6-0.2.16-alpha.apk`。
+- APK：`FilmStudioNex6-0.2.17-alpha.apk`。
 
 本项目只安装普通 PMCA 应用，不写固件、不写相机设置存储、不修改解锁用的 Backup 属性。安装 APK 与解锁流程相互独立。
 
 ## 1. 下载与校验
 
-从 Releases 页面下载 `FilmStudioNex6-0.2.16-alpha.apk`（tag `0.2.16` 触发的 CI 构建），或使用本地构建产物 `output/FilmStudioNex6-0.2.16-alpha.apk`。
+从 Releases 页面下载 `FilmStudioNex6-0.2.17-alpha.apk`（tag `0.2.17` 触发的 CI 构建），或使用本地构建产物 `output/FilmStudioNex6-0.2.17-alpha.apk`。
 
 当前本地构建的 SHA-256：
 
 ```text
-5cc4e4da07772b87de8a177f3c76fe567cdd2d328c1b2e635fd728bf69013001
+2e0a3be4ab88dddb472fd657f43bff336fd9301d66b445f16f9b7589f46c464d
 ```
 
 > Release 中的 APK 由 CI 用一次性调试密钥签名，SHA-256 与上面的本地构建不同，校验时请使用该 Release 附带的 `SHA256SUMS.txt`。两种签名不能互相覆盖安装；需要与文档校验值一致时使用本地构建。
@@ -33,13 +33,13 @@
 macOS / Linux：
 
 ```sh
-shasum -a 256 FilmStudioNex6-0.2.16-alpha.apk
+shasum -a 256 FilmStudioNex6-0.2.17-alpha.apk
 ```
 
 Windows PowerShell：
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\FilmStudioNex6-0.2.16-alpha.apk
+Get-FileHash -Algorithm SHA256 .\FilmStudioNex6-0.2.17-alpha.apk
 ```
 
 校验的是文件一致性，不是兼容性或法律许可保证。
@@ -60,7 +60,7 @@ adb devices
 ## 3. 安装
 
 ```sh
-adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.16-alpha.apk
+adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.17-alpha.apk
 ```
 
 成功时显示 `Success`。包名是新的 `com.filmstudio.nex6`，可以与 a5100 版 Film Studio 并存，不需要先卸载旧应用。
@@ -69,7 +69,7 @@ adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.16-alpha.apk
 
 ```sh
 adb -s CAMERA_IP:5555 uninstall com.filmstudio.nex6
-adb -s CAMERA_IP:5555 install FilmStudioNex6-0.2.16-alpha.apk
+adb -s CAMERA_IP:5555 install FilmStudioNex6-0.2.17-alpha.apk
 ```
 
 **不要卸载任何 Sony 系统包或其他不认识的包。** 如果只是签名不同，使用同一份 `.private/signing.pem` 重新构建即可覆盖安装；该私钥不随仓库分发。

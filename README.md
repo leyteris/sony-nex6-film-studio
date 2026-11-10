@@ -2,9 +2,9 @@
 
 **中文** · [English](README.en.md)
 
-面向 **Sony NEX-6** 的独立、非官方胶片风格应用。它把 Film Studio 的 15 个风格用 NEX-6 支持的运行时相机参数实现，在实时取景上叠加自绘控制界面，并在退出时恢复相机原始参数。
+面向 **Sony NEX-6** 的独立、非官方胶片风格应用。它把 Film Studio 的 17 个风格用 NEX-6 支持的运行时相机参数实现，在实时取景上叠加自绘控制界面，并在退出时恢复相机原始参数。
 
-> **当前状态：`0.2.16-alpha`（versionCode 18），尚未取得可用的 NEX-6 实机日志证据。** 0.2.13 已在 NEX-6 上启动并写卡，但回传的 `REPORT.TXT`/`FSLOG.TXT` 经 MTP 复制后全是 NUL。0.2.15 的实机反馈确认了一个关键前提：拨盘在 iAuto / SCN 时黑白风格仍出彩色，转到 P 后正常——这两种自动模式由相机接管创意风格与照片效果。0.2.16 因此在完整面板底部右侧加入橙色 `P/A/S/M:风格` 提示，并保持 0.2.15 的黑白双路径。本版已完成构建、API 10 静态验收和 Android 37 模拟器冒烟测试；`camera_tested=false`。在取得实机证据前，本项目不声称兼容或可用。
+> **当前状态：`0.2.17-alpha`（versionCode 19），尚未取得可用的 NEX-6 实机日志证据。** 0.2.13 已在 NEX-6 上启动并写卡，但回传的 `REPORT.TXT`/`FSLOG.TXT` 经 MTP 复制后全是 NUL。0.2.15 的实机反馈确认了一个关键前提：拨盘在 iAuto / SCN 时黑白风格仍出彩色，转到 P 后正常——这两种自动模式由相机接管创意风格与照片效果。0.2.16 因此在完整面板底部右侧加入橙色 `P/A/S/M:风格` 提示，并保持 0.2.15 的黑白双路径。0.2.17 新增两个徕卡参考 Look（经典、自然），风格总数变为 17。本版已完成构建、API 10 静态验收和 Android 37 模拟器冒烟测试；`camera_tested=false`。在取得实机证据前，本项目不声称兼容或可用。
 
 ## 项目边界
 
@@ -16,7 +16,7 @@
 
 ## 功能
 
-- 15 个风格（10 个富士参考、5 个理光参考），4 档强度（30 / 50 / 70 / 100%）。**使用前请把模式拨盘置于 P / A / S / M**：iAuto 与 SCN 由相机接管风格，黑白会出彩色。
+- 17 个风格（10 个富士参考、5 个理光参考、2 个徕卡参考），4 档强度（30 / 50 / 70 / 100%）。**使用前请把模式拨盘置于 P / A / S / M**：iAuto 与 SCN 由相机接管风格，黑白会出彩色。
 - 黑白风格（ACROS / HCBW / MORI）同时写创意风格 `mono` 和单色照片效果（`richtone-mono` / `rough-mono`）：一路被固件丢弃时另一路仍可产生灰阶，写入后两路都回读并显示在右上角 `CM … FX …`。
 - 完整面板底部右侧常驻橙色 `P/A/S/M:风格` 提示；左右键或拨轮切换风格，上下键切换强度，取景实时变化。
 - 三阶段界面：完整面板 → 左下角小胶囊 → 仅取景；DELETE 或 SK2 循环切换。
@@ -61,7 +61,7 @@ PMCA（PlayMemories Camera Apps）是安装本应用所需的机内平台。安�
 | DISP | 打开 / 关闭屏内日志；日志打开时上下翻页，BACK 关闭 |
 | PLAY / MOVIE | 忽略 |
 
-## 15 个风格
+## 17 个风格
 
 | # | 标签 | 名称 |
 | --- | --- | --- |
@@ -80,8 +80,10 @@ PMCA（PlayMemories Camera Apps）是安装本应用所需的机内平台。安�
 | 12 | HCBW | Ricoh Hi-Contrast B&W |
 | 13 | MORI | Ricoh Moriyama Mono |
 | 14 | CROSS | Ricoh Cross Process |
+| 15 | LEICA-C | Leica Look Classic |
+| 16 | LEICA-N | Leica Look Natural |
 
-每个风格对应的创意风格、饱和、对比、锐度、白平衡和 DRO 参数见 [ARCHITECTURE.md](docs/ARCHITECTURE.md#5-15-个风格)。名称只用于说明风格取向，不代表与富士或理光官方色彩逐像素一致。
+每个风格对应的创意风格、饱和、对比、锐度、白平衡和 DRO 参数见 [ARCHITECTURE.md](docs/ARCHITECTURE.md#5-17-个风格)。名称只用于说明风格取向，不代表与富士、理光或徕卡官方色彩逐像素一致。
 
 ## 安装
 
@@ -91,11 +93,11 @@ PMCA（PlayMemories Camera Apps）是安装本应用所需的机内平台。安�
 2. 相机已启用 Wi-Fi ADB（Sony-PMCA-RE / OpenMemories: Tweak）；
 3. 电脑已安装 Android Platform-Tools。
 
-在 Releases 页面下载 `FilmStudioNex6-0.2.16-alpha.apk`（由 tag `0.2.16` 触发 CI 构建），或使用本地构建产物 `output/FilmStudioNex6-0.2.16-alpha.apk`，然后：
+在 Releases 页面下载 `FilmStudioNex6-0.2.17-alpha.apk`（由 tag `0.2.17` 触发 CI 构建），或使用本地构建产物 `output/FilmStudioNex6-0.2.17-alpha.apk`，然后：
 
 ```sh
 adb connect CAMERA_IP:5555
-adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.16-alpha.apk
+adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.17-alpha.apk
 ```
 
 `CAMERA_IP` 只是占位符，必须替换为相机当前显示的地址，并保留 `:5555` 端口。分享截图或日志时请遮住真实 IP。
@@ -103,7 +105,7 @@ adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.16-alpha.apk
 当前构建的 SHA-256：
 
 ```text
-5cc4e4da07772b87de8a177f3c76fe567cdd2d328c1b2e635fd728bf69013001
+2e0a3be4ab88dddb472fd657f43bff336fd9301d66b445f16f9b7589f46c464d
 ```
 
 该 SHA-256 对应本地 `.private/signing.pem` 签名的 `output/` 构建。CI 生成的 Release APK 使用一次性调试密钥，签名和校验值都不同，请以 Release 附带的 `SHA256SUMS.txt` 为准；两者不能互相覆盖安装。
@@ -145,9 +147,9 @@ adb -s CAMERA_IP:5555 pull /sdcard/FSNEX6/REPORT.TXT
 python3 tools/build.py
 ```
 
-产物写入 `output/FilmStudioNex6-0.2.16-alpha.apk`，同时生成 `validation/FilmStudioNex6-0.2.16-alpha.json`。签名默认使用本地 `.private/signing.pem`；该文件不提交、不上传。缺失时脚本会用一次性调试密钥签名，签名不同，不能覆盖安装已发布版本。
+产物写入 `output/FilmStudioNex6-0.2.17-alpha.apk`，同时生成 `validation/FilmStudioNex6-0.2.17-alpha.json`。签名默认使用本地 `.private/signing.pem`；该文件不提交、不上传。缺失时脚本会用一次性调试密钥签名，签名不同，不能覆盖安装已发布版本。
 
-GitHub Actions（[.github/workflows/build.yml](.github/workflows/build.yml)）会在 push 和 PR 时执行 API 10 编译门并构建 APK，产物作为 workflow artifact 下载；推送任意 tag（如 `0.2.16`）时还会创建带 APK、`SHA256SUMS.txt` 和 validation JSON 的预发布 Release。CI 不持有签名私钥，因此 artifact 和 Release 里的 APK 都是一次性调试签名，只用于测试，不能覆盖安装本地构建或正式版本。
+GitHub Actions（[.github/workflows/build.yml](.github/workflows/build.yml)）会在 push 和 PR 时执行 API 10 编译门并构建 APK，产物作为 workflow artifact 下载；推送任意 tag（如 `0.2.17`）时还会创建带 APK、`SHA256SUMS.txt` 和 validation JSON 的预发布 Release。CI 不持有签名私钥，因此 artifact 和 Release 里的 APK 都是一次性调试签名，只用于测试，不能覆盖安装本地构建或正式版本。
 
 重新生成简/繁字体子集（可选，需要网络与 `fonttools`）：
 
@@ -175,7 +177,7 @@ inputs/         本地工具链与第三方输入（Git 忽略）
 
 - 尚未实机验证；无法确认取景、拍摄、落卡、对焦回调和退出恢复在 NEX-6 上的实际行为。
 - **模式拨盘必须在 P / A / S / M**：iAuto 与 SCN 由相机接管创意风格和照片效果，黑白等风格不会生效；完整面板右下角会常驻 `P/A/S/M:风格` 提示。
-- 参数级近似，不是 a5100 版的矩阵/Gamma 或 LUT 移植。
+- 参数级近似，不是 a5100/a7R II 版的矩阵/Gamma 或 LUT 移植；两个徕卡 Look 只参考上游的命名与参数取向。
 - 风格只在应用运行期间生效；退出后原生相机不带风格。
 - 某些机身可能丢弃色温、微调或 DRO 参数，应用会回退到核心参数并记录 `DROPPED`。
 - 对焦框是应用自绘的居中指示，不是机身选择的对焦点。
@@ -184,11 +186,11 @@ inputs/         本地工具链与第三方输入（Git 忽略）
 
 ## 许可与致谢
 
-本项目源自并感谢 [ukiki0718-netizen/sony-a5100-film-studio](https://github.com/ukiki0718-netizen/sony-a5100-film-studio)：a5100 版 Film Studio 定义了本项目的 15 个风格与验证方法，NEX-6 外壳是在其基础上重写的独立实现。
+本项目源自并感谢 [ukiki0718-netizen/sony-a5100-film-studio](https://github.com/ukiki0718-netizen/sony-a5100-film-studio)：a5100 版 Film Studio 定义了前 15 个风格与验证方法，NEX-6 外壳是在其基础上重写的独立实现。两个徕卡 Look 参考 [Chai-Yu/sony-a7r2-film-studio](https://github.com/Chai-Yu/sony-a7r2-film-studio) 的徕卡命名与参数取向；本仓库不包含该项目的 LUT、矩阵或曲线数据。
 
 本项目新写代码与文档采用 [PolyForm Noncommercial 1.0.0](LICENSE)。`tools/sign_apk.py` 源自 bonyback1/sony-pmca-ricoh-mod，保持 Apache-2.0；内置 Noto Sans 子集采用 SIL OFL 1.1。Recipe Lab 与 sony-lut-camera 为 GPL-3.0，仅作行为/接口参考，未复制源码。
 
-本仓库不包含 Sony 固件、Sony 基础应用、富士官方 LUT、理光矩阵参数或签名私钥。Sony、PlayMemories、FUJIFILM、Ricoh 等商标归各自权利人所有，本项目与其无隶属、认证或背书关系。
+本仓库不包含 Sony 固件、Sony 基础应用、富士或徕卡官方 LUT、理光矩阵参数或签名私钥。Sony、PlayMemories、FUJIFILM、Ricoh、Leica 等商标归各自权利人所有，本项目与其无隶属、认证或背书关系。
 
 分别见 [LICENSING.md](LICENSING.md)、[NOTICE](NOTICE) 和 [SOURCES.md](docs/SOURCES.md)。
 

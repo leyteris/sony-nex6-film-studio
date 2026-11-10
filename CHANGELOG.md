@@ -1,5 +1,16 @@
 # 版本历史
 
+## 0.2.17-alpha — 2026-11-09
+
+- 新增两个徕卡参考 Look：`LEICA-C`（徕卡 经典 / Leica Look Classic）与 `LEICA-N`（徕卡 自然 / Leica Look Natural），风格总数 15 → 17；
+- 参数按上游 [Chai-Yu/sony-a7r2-film-studio](https://github.com/Chai-Yu/sony-a7r2-film-studio) 的机身回退方向落地：Natural 用 `standard` + `0/0/0` + AWB auto；Classic 用 `neutral` + `-1/-1/0` + AWB auto。NEX-6 没有矩阵/Gamma 通道，因此这只是参数级近似，未复制上游 LUT、矩阵或曲线；
+- 中文名沿用上游的家族前缀规则：富士 10 个 + 理光 5 个 + 徕卡 2 个；补全卡片短名与英文名；
+- 重新生成 SC/TC 字体子集，加入 `富士`、`徕卡`/`徠卡`、`自然` 等新界面用字；
+- Manifest 升至 `0.2.17-alpha` / versionCode 19；`tools/build.py`、CI 产物名、README、安装文档与 `validation/` 同步；构建元数据新增 `look_families` 计数；
+- 构建与本轮验证：`2e0a3be4…464d`、81,270 B、11 个 APK 条目、v1 签名；22 个 class、35 个 `android.*` 类型、0 缺失、dex 035；Android 37 模拟器（640×480）确认 `LEICA-C`/`LEICA-N` 的简体、繁体、英文名称与参数行，日志记录 `APPLY LEICA-C 100% neutral`、`APPLY LEICA-N 100% standard`、`APPLY LEICA-N 70% standard`，MENU 退出 `RESTORE ok`，`REPORT.TXT` 2,016 字节、43 行、0 个 NUL；
+- 第二轮模拟器会话（2026-11-10）补验 `LEICA-C` 低强度：100% → 70% → 50% → 30% 四档芯片与 `APPLY LEICA-C <pct>% neutral cm=neutral` 日志一致；胶囊显示 `LEICA-C 经典 30%`、隐藏阶段无覆盖元素，DEL 三阶段循环与 MENU 退出 `RESTORE ok` 通过；该会话 `REPORT.TXT` 1,667 字节、44 行、0 个 NUL；
+- 已知：`camera_tested=false`，两个新 Look 与其他 15 个一样等待 NEX-6 实机验证。
+
 ## 0.2.16-alpha — 2026-11-09
 
 - 完整面板底部提示行右侧新增右对齐的橙色模式提示：简体 `P/A/S/M:风格`、繁体 `P/A/S/M:風格`、英文 `P/A/S/M: STYLE`，与左侧按键提示同一基线；胶囊和隐藏阶段不显示；

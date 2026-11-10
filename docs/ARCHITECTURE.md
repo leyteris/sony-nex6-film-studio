@@ -1,6 +1,6 @@
 # 架构与实现：Film Studio NEX-6
 
-状态：`0.2.16-alpha` 独立外壳已实现，静态验收和模拟器冒烟测试通过；0.2.13 已在用户的 NEX-6 上启动并写卡，但回传日志全 NUL，**各项行为在实机上均未验证**（`camera_tested=false`）。用户在 0.2.15 实机上确认：拨盘在 iAuto / SCN 时黑白出彩色，P/A/S/M 下正常——0.2.16 因此加入底部 `P/A/S/M` 提示。目标机型为 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。
+状态：`0.2.17-alpha` 独立外壳已实现，静态验收和模拟器冒烟测试通过；0.2.13 已在用户的 NEX-6 上启动并写卡，但回传日志全 NUL，**各项行为在实机上均未验证**（`camera_tested=false`）。用户在 0.2.15 实机上确认：拨盘在 iAuto / SCN 时黑白出彩色，P/A/S/M 下正常——0.2.16 因此加入底部 `P/A/S/M` 提示。0.2.17 增加两个徕卡参考 Look（经典、自然），风格总数为 17。目标机型为 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。
 
 > **English summary.** Film Studio NEX-6 is a standalone PMCA app for the first-generation Sony NEX-6. The a5100 Film Studio engine depends on `CameraEx.setRGBMatrix` and the extended gamma table, which the NEX-6 firmware does not expose. This app therefore keeps the Film Studio look list but expresses each look with runtime `Camera.Parameters` the NEX-6 does accept. It is a plain `Activity` + `SurfaceView` + hand-drawn `Canvas` overlay, with every Sony class reached through reflection. It is an approximation, not a LUT or matrix/gamma port.
 
@@ -76,13 +76,13 @@ MainActivity (Activity)
 | `MainActivity.java` | Activity、按键分发、UI 阶段、拍摄与落卡检查、日志心跳 |
 | `Cam.java` | Sony 相机打开/参数/对焦/拍摄/恢复 |
 | `UiView.java` | 全部界面绘制，无图片资源 |
-| `Looks.java` | 15 个风格的参数表与强度缩放 |
+| `Looks.java` | 17 个风格的参数表与强度缩放 |
 | `Lang.java` | 简/繁/英界面文本与内置字体选择 |
 | `Log8.java` | 8.3 安全路径上的尽力日志、回读探针与内存快照 |
 
 编译后共 22 个 class（含内部类与匿名回调），只引用 35 个 `android.*` 类型，全部存在于 Android 2.3.3 stub。
 
-## 5. 15 个风格
+## 5. 17 个风格
 
 | # | 标签 | 名称 | 创意风格 | 饱和 | 对比 | 锐度 | 白平衡 | DRO |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -101,12 +101,16 @@ MainActivity (Activity)
 | 12 | HCBW | Ricoh Hi-Contrast B&W | mono | 0 | +3 | +2 | AWB | off |
 | 13 | MORI | Ricoh Moriyama Mono | mono | 0 | +3 | +3 | AWB | off |
 | 14 | CROSS | Ricoh Cross Process | vivid | +3 | +2 | 0 | 5000K, A+2 | off |
+| 15 | LEICA-C | Leica Look Classic | neutral | -1 | -1 | 0 | AWB | auto |
+| 16 | LEICA-N | Leica Look Natural | standard | 0 | 0 | 0 | AWB | auto |
 
 强度为 30% / 50% / 70% / 100%。以 100% 为完整值，低强度对饱和、对比、锐度和 A-B/G-M 做线性缩放并四舍五入；创意风格、色温和 DRO 档位不插值。黑白风格在低强度下仍是黑白；若单色 Picture Effect 生效，对比/锐度滑块可能被相机忽略，灰阶由效果本身决定。
 
 ACROS 另写 `picture-effect=richtone-mono`；HCBW / MORI 写 `rough-mono`（高反差黑白）。
 
-> 这是参数级近似，不是 LUT 移植。风格名称只用于说明取向，不代表与富士或理光官方色彩逐像素一致。
+两个徕卡 Look 参考 [Chai-Yu/sony-a7r2-film-studio](https://github.com/Chai-Yu/sony-a7r2-film-studio) 的命名与机身回退映射：Natural 用 `standard`；Classic 用 `neutral`，再用少量降饱和/降对比近似其回退观感。它们没有使用该项目的 LUT、矩阵或曲线数据。
+
+> 这是参数级近似，不是 LUT 移植。风格名称只用于说明取向，不代表与富士、理光或徕卡官方色彩逐像素一致。
 
 ## 6. 参数应用与回退
 

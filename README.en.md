@@ -2,9 +2,9 @@
 
 [中文](README.md) · **English**
 
-A standalone, unofficial film-look app for the **Sony NEX-6**. It expresses the fifteen Film Studio looks with runtime camera parameters the NEX-6 actually accepts, draws its own control overlay over the live view, and restores the camera's original parameters on exit.
+A standalone, unofficial film-look app for the **Sony NEX-6**. It expresses the seventeen Film Studio looks with runtime camera parameters the NEX-6 actually accepts, draws its own control overlay over the live view, and restores the camera's original parameters on exit.
 
-> **Status: `0.2.16-alpha` (versionCode 18), no readable NEX-6 hardware logs yet.** 0.2.13 did start on a NEX-6 and wrote its card files, but the retrieved `REPORT.TXT`/`FSLOG.TXT` arrived as all-NUL over MTP. A 0.2.15 check on hardware confirmed the missing premise: with the mode dial in iAuto / SCN the monochrome looks still rendered in color, while P produced grayscale — those auto modes hand Creative Style and Picture Effect back to the camera. 0.2.16 therefore adds an orange `P/A/S/M: STYLE` hint at the right of the bottom tips line and keeps the 0.2.15 dual mono path. The build, API-10 static checks and Android 37 emulator smoke tests are complete; `camera_tested=false`. Until on-camera evidence exists, this project makes no compatibility or usability claim.
+> **Status: `0.2.17-alpha` (versionCode 19), no readable NEX-6 hardware logs yet.** 0.2.13 did start on a NEX-6 and wrote its card files, but the retrieved `REPORT.TXT`/`FSLOG.TXT` arrived as all-NUL over MTP. A 0.2.15 check on hardware confirmed the missing premise: with the mode dial in iAuto / SCN the monochrome looks still rendered in color, while P produced grayscale — those auto modes hand Creative Style and Picture Effect back to the camera. 0.2.16 therefore adds an orange `P/A/S/M: STYLE` hint at the right of the bottom tips line and keeps the 0.2.15 dual mono path. 0.2.17 adds two Leica-reference looks (Classic, Natural), bringing the total to 17. The build, API-10 static checks and Android 37 emulator smoke tests are complete; `camera_tested=false`. Until on-camera evidence exists, this project makes no compatibility or usability claim.
 
 ## Scope
 
@@ -16,7 +16,7 @@ A standalone, unofficial film-look app for the **Sony NEX-6**. It expresses the 
 
 ## Features
 
-- 15 looks (10 Fujifilm-reference, 5 Ricoh-reference), 4 strengths (30 / 50 / 70 / 100%). **Set the mode dial to P / A / S / M first**: iAuto and SCN let the camera own the look, so B&W renders in color.
+- 17 looks (10 Fujifilm-reference, 5 Ricoh-reference, 2 Leica-reference), 4 strengths (30 / 50 / 70 / 100%). **Set the mode dial to P / A / S / M first**: iAuto and SCN let the camera own the look, so B&W renders in color.
 - The monochrome looks (ACROS / HCBW / MORI) write both Creative Style `mono` and a mono Picture Effect (`richtone-mono` / `rough-mono`): if the firmware drops one path, the other can still produce a grayscale frame. Both read-backs appear in the top-right corner as `CM … FX …`.
 - An orange `P/A/S/M: STYLE` hint stays at the right of the full panel's bottom tips line. LEFT/RIGHT or the wheels switch looks; UP/DOWN change strength, with live-view feedback.
 - Three-stage UI: full panel → bottom-left pill → live view only; DELETE or SK2 cycles.
@@ -61,7 +61,7 @@ PMCA (PlayMemories Camera Apps) is the on-camera platform required to install th
 | DISP | Open / close the on-screen log; UP/DOWN page it while open, BACK closes it |
 | PLAY / MOVIE | Ignored |
 
-## The 15 looks
+## The 17 looks
 
 | # | Tag | Name |
 | --- | --- | --- |
@@ -80,8 +80,10 @@ PMCA (PlayMemories Camera Apps) is the on-camera platform required to install th
 | 12 | HCBW | Ricoh Hi-Contrast B&W |
 | 13 | MORI | Ricoh Moriyama Mono |
 | 14 | CROSS | Ricoh Cross Process |
+| 15 | LEICA-C | Leica Look Classic |
+| 16 | LEICA-N | Leica Look Natural |
 
-The per-look color mode, saturation, contrast, sharpness, white balance and DRO values are in [ARCHITECTURE.md](docs/ARCHITECTURE.md#5-15-个风格) (Chinese). Names describe the intended look only; they are not pixel-accurate matches to Fujifilm or Ricoh output.
+The per-look color mode, saturation, contrast, sharpness, white balance and DRO values are in [ARCHITECTURE.md](docs/ARCHITECTURE.md#5-17-个风格) (Chinese). Names describe the intended look only; they are not pixel-accurate matches to Fujifilm, Ricoh or Leica output.
 
 ## Installation
 
@@ -91,11 +93,11 @@ Prerequisites:
 2. Wi-Fi ADB is enabled on the camera (Sony-PMCA-RE / OpenMemories: Tweak).
 3. Android Platform-Tools are installed on the computer.
 
-Download `FilmStudioNex6-0.2.16-alpha.apk` from the Releases page (built by CI on tag `0.2.16`), or use the local build at `output/FilmStudioNex6-0.2.16-alpha.apk`, then run:
+Download `FilmStudioNex6-0.2.17-alpha.apk` from the Releases page (built by CI on tag `0.2.17`), or use the local build at `output/FilmStudioNex6-0.2.17-alpha.apk`, then run:
 
 ```sh
 adb connect CAMERA_IP:5555
-adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.16-alpha.apk
+adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.17-alpha.apk
 ```
 
 `CAMERA_IP` is a placeholder; replace it with the address currently shown on the camera and keep the `:5555` port. Mask the real IP before sharing screenshots or logs.
@@ -103,7 +105,7 @@ adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.16-alpha.apk
 SHA-256 of the current build:
 
 ```text
-5cc4e4da07772b87de8a177f3c76fe567cdd2d328c1b2e635fd728bf69013001
+2e0a3be4ab88dddb472fd657f43bff336fd9301d66b445f16f9b7589f46c464d
 ```
 
 This SHA-256 belongs to the locally signed `output/` build. The CI release APK is signed with a throwaway debug key: its signature and checksum differ, so use the `SHA256SUMS.txt` attached to that release. The two cannot update each other in place.
@@ -145,9 +147,9 @@ Requirements: JDK 17, Android SDK build-tools 36.0.0, `platforms/android-37.0/an
 python3 tools/build.py
 ```
 
-The APK is written to `output/FilmStudioNex6-0.2.16-alpha.apk` and a metadata file to `validation/FilmStudioNex6-0.2.16-alpha.json`. Signing uses the local `.private/signing.pem`, which is never committed or uploaded. If it is missing, the script signs with a throwaway debug key; that signature differs and cannot update an installed release in place.
+The APK is written to `output/FilmStudioNex6-0.2.17-alpha.apk` and a metadata file to `validation/FilmStudioNex6-0.2.17-alpha.json`. Signing uses the local `.private/signing.pem`, which is never committed or uploaded. If it is missing, the script signs with a throwaway debug key; that signature differs and cannot update an installed release in place.
 
-GitHub Actions ([.github/workflows/build.yml](.github/workflows/build.yml)) runs the API-10 compile gate and builds the APK on every push and pull request, then uploads it as a workflow artifact. Pushing any tag (for example `0.2.16`) also creates a pre-release containing the APK, `SHA256SUMS.txt` and the validation JSON. CI has no signing key, so both the artifact and the release APK are debug-signed and are meant for testing only; they cannot update an installed local or release build.
+GitHub Actions ([.github/workflows/build.yml](.github/workflows/build.yml)) runs the API-10 compile gate and builds the APK on every push and pull request, then uploads it as a workflow artifact. Pushing any tag (for example `0.2.17`) also creates a pre-release containing the APK, `SHA256SUMS.txt` and the validation JSON. CI has no signing key, so both the artifact and the release APK are debug-signed and are meant for testing only; they cannot update an installed local or release build.
 
 To regenerate the Chinese font subsets (optional; needs network and `fonttools`):
 
@@ -175,7 +177,7 @@ inputs/         Local toolchain and third-party inputs (git-ignored)
 
 - No hardware validation yet; preview, capture, card save, focus callbacks and exit restore are unconfirmed on a NEX-6.
 - **The mode dial must stay on P / A / S / M**: iAuto and SCN hand Creative Style and Picture Effect back to the camera, so the look does not land. The bottom-right hint of the full panel reads `P/A/S/M: STYLE`.
-- Parameter-level approximation, not a port of the a5100 matrix/gamma or LUT engine.
+- Parameter-level approximation, not a port of the a5100/a7R II matrix, gamma or LUT engine; the two Leica looks reference only the upstream naming and parameter direction.
 - Looks apply only while the app is open; the native camera does not retain them.
 - Some bodies may drop Kelvin, fine-tune or DRO parameters; the app falls back to the core subset and logs `DROPPED`.
 - The focus frame is an app-centered indicator, not the body's selected AF point.
@@ -184,11 +186,11 @@ inputs/         Local toolchain and third-party inputs (git-ignored)
 
 ## License and credits
 
-This project originated from, and thanks, [ukiki0718-netizen/sony-a5100-film-studio](https://github.com/ukiki0718-netizen/sony-a5100-film-studio): the a5100 Film Studio defined the fifteen looks and the validation approach, and the NEX-6 shell is an independent rewrite built on that work.
+This project originated from, and thanks, [ukiki0718-netizen/sony-a5100-film-studio](https://github.com/ukiki0718-netizen/sony-a5100-film-studio): the a5100 Film Studio defined the first fifteen looks and the validation approach, and the NEX-6 shell is an independent rewrite built on that work. The two Leica looks reference the naming and parameter direction of [Chai-Yu/sony-a7r2-film-studio](https://github.com/Chai-Yu/sony-a7r2-film-studio); this repository contains none of that project's LUT, matrix or curve data.
 
 Original code and documentation are under [PolyForm Noncommercial 1.0.0](LICENSE). `tools/sign_apk.py` is adapted from bonyback1/sony-pmca-ricoh-mod and remains Apache-2.0; the bundled Noto Sans subsets are SIL OFL 1.1. Recipe Lab and sony-lut-camera are GPL-3.0 and were used as behavioral/interface references only; no source was copied.
 
-This repository contains no Sony firmware or base-app code, no official Fujifilm LUTs, no Ricoh matrix data and no signing private key. Sony, PlayMemories, FUJIFILM and Ricoh trademarks belong to their owners; this project is not affiliated with, certified by or endorsed by them.
+This repository contains no Sony firmware or base-app code, no official Fujifilm or Leica LUTs, no Ricoh matrix data and no signing private key. Sony, PlayMemories, FUJIFILM, Ricoh and Leica trademarks belong to their owners; this project is not affiliated with, certified by or endorsed by them.
 
 See [LICENSING.md](LICENSING.md), [NOTICE](NOTICE) and [SOURCES.md](docs/SOURCES.md).
 
