@@ -332,12 +332,7 @@ final class Cam {
         p.put("picture-effect", l.effect == null ? "off" : l.effect);
         p.put("storage-fmt", "jpeg");
         p.put("jpeg-quality", "50");
-        if ("kelvin".equals(l.wb)) {
-            p.put("whitebalance", "color-temp");
-            p.put("color-temperture-white-balance", String.valueOf(l.kelvin * 100));
-        } else {
-            p.put("whitebalance", "auto");
-        }
+        p.put("whitebalance", "auto");
         p.put("light-balance-for-white-balance", String.valueOf(l.ab));
         // The camera counts magenta positive; the look table counts green positive.
         p.put("color-compensation-for-white-balance", String.valueOf(-l.gm));
