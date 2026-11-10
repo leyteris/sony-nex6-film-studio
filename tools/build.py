@@ -20,8 +20,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / 'app'
 BUILD = ROOT / 'build-local/app'
-OUTPUT = ROOT / 'output/FilmStudioNex6-0.2.17-alpha.apk'
-VALIDATION = ROOT / 'validation/FilmStudioNex6-0.2.17-alpha.json'
+OUTPUT = ROOT / 'output/FilmStudioNex6-0.2.18-alpha.apk'
+VALIDATION = ROOT / 'validation/FilmStudioNex6-0.2.18-alpha.json'
 
 
 def sdk_root():
