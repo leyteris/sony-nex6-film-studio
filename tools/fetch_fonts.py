@@ -28,9 +28,9 @@ UA = ('Mozilla/5.0 (Linux; U; Android 2.3.7; en-us; Nexus One Build/FRF91) '
       'AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1')
 
 SC_TEXT = ('强度上下风格左右中央拍摄界面退出已快门失败相机未就绪打开实时取景参数被拒绝'
-           '标准鲜艳经典正片负电影漂白黑理光高反差森山逆冲柔和关闭翻页')
+           '标准鲜艳经典正片负电影漂白黑理光高反差森山逆冲柔和关闭翻页富士徕卡自然')
 TC_TEXT = ('強度上下風格左右中央拍攝介面退出已快門失敗相機未就緒開啟即時取景參數被拒絕離開'
-           '標準鮮豔經典正片負電影漂白黑理光高反差森山逆沖柔和關閉翻頁')
+           '標準鮮豔經典正片負電影漂白黑理光高反差森山逆沖柔和關閉翻頁富士徠卡自然')
 
 FAMILIES = [
     ('Noto Sans SC', 'NotoSansSC-UI.ttf', 'OFL-NotoSansSC.txt', SC_TEXT),

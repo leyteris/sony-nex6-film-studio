@@ -96,21 +96,23 @@ final class Lang {
     }
 
     private static String lookName(String tag) {
-        if ("PROVIA".equals(tag)) return t("PROVIA 标准", "PROVIA 標準");
-        if ("VELVIA".equals(tag)) return t("Velvia 鲜艳", "Velvia 鮮豔");
-        if ("ASTIA".equals(tag)) return t("ASTIA 柔和", "ASTIA 柔和");
-        if ("CHROME".equals(tag)) return t("经典正片", "經典正片");
-        if ("REALA".equals(tag)) return "REALA ACE";
-        if ("PRONEG".equals(tag)) return "PRO Neg. Std";
-        if ("CNEG".equals(tag)) return t("经典负片", "經典負片");
-        if ("ETERNA".equals(tag)) return t("ETERNA 电影", "ETERNA 電影");
-        if ("BLEACH".equals(tag)) return t("ETERNA 漂白", "ETERNA 漂白");
-        if ("ACROS".equals(tag)) return t("ACROS 黑白", "ACROS 黑白");
+        if ("PROVIA".equals(tag)) return t("富士 PROVIA 标准", "富士 PROVIA 標準");
+        if ("VELVIA".equals(tag)) return t("富士 Velvia 鲜艳", "富士 Velvia 鮮豔");
+        if ("ASTIA".equals(tag)) return t("富士 ASTIA 柔和", "富士 ASTIA 柔和");
+        if ("CHROME".equals(tag)) return t("富士 经典正片", "富士 經典正片");
+        if ("REALA".equals(tag)) return "富士 REALA ACE";
+        if ("PRONEG".equals(tag)) return "富士 PRO Neg. Std";
+        if ("CNEG".equals(tag)) return t("富士 经典负片", "富士 經典負片");
+        if ("ETERNA".equals(tag)) return t("富士 ETERNA 电影", "富士 ETERNA 電影");
+        if ("BLEACH".equals(tag)) return t("富士 ETERNA 漂白", "富士 ETERNA 漂白");
+        if ("ACROS".equals(tag)) return t("富士 ACROS 黑白", "富士 ACROS 黑白");
         if ("GR+".equals(tag)) return t("理光 正片", "理光 正片");
         if ("GR-".equals(tag)) return t("理光 负片", "理光 負片");
         if ("HCBW".equals(tag)) return t("理光 高反差黑白", "理光 高反差黑白");
         if ("MORI".equals(tag)) return t("理光 森山黑白", "理光 森山黑白");
         if ("CROSS".equals(tag)) return t("理光 正负逆冲", "理光 正負逆沖");
+        if ("LEICA-C".equals(tag)) return t("徕卡 经典", "徠卡 經典");
+        if ("LEICA-N".equals(tag)) return t("徕卡 自然", "徠卡 自然");
         return null;
     }
 
@@ -141,6 +143,8 @@ final class Lang {
         if ("HCBW".equals(tag)) return t("高反差", "高反差");
         if ("MORI".equals(tag)) return t("森山", "森山");
         if ("CROSS".equals(tag)) return t("逆冲", "逆沖");
+        if ("LEICA-C".equals(tag)) return t("经典", "經典");
+        if ("LEICA-N".equals(tag)) return t("自然", "自然");
         return null;
     }
 

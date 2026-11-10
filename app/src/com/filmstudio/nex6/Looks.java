@@ -3,7 +3,7 @@ package com.filmstudio.nex6;
 import java.util.Locale;
 
 /**
- * The 15 Film Studio looks, expressed only with parameters the NEX-6 camera
+ * The 17 Film Studio looks, expressed only with parameters the NEX-6 camera
  * layer actually accepts. NEX-6 firmware has no RGB matrix and no extended
  * gamma table, so this is a parameter-level approximation, not a LUT port.
  */
@@ -82,7 +82,9 @@ final class Looks {
             new Look("GR-", "Ricoh Negative Film", 0xFF8C7A63, "neutral", -1, +1, 0, "kelvin", 5600, +1, 0, "auto"),
             new Look("HCBW", "Ricoh Hi-Contrast B&W", 0xFF9E9E9E, "mono", 0, +3, +2, "auto", 0, 0, 0, "off", "rough-mono"),
             new Look("MORI", "Ricoh Moriyama Mono", 0xFF6B6B6B, "mono", 0, +3, +3, "auto", 0, 0, 0, "off", "rough-mono"),
-            new Look("CROSS", "Ricoh Cross Process", 0xFFB07A9E, "vivid", +3, +2, 0, "kelvin", 5000, +2, 0, "off")
+            new Look("CROSS", "Ricoh Cross Process", 0xFFB07A9E, "vivid", +3, +2, 0, "kelvin", 5000, +2, 0, "off"),
+            new Look("LEICA-C", "Leica Look Classic", 0xFFB08A6A, "neutral", -1, -1, 0, "auto", 0, 0, 0, "auto"),
+            new Look("LEICA-N", "Leica Look Natural", 0xFF9AA58E, "standard", 0, 0, 0, "auto", 0, 0, 0, "auto")
     };
 
     static final int[] STRENGTH = new int[] { 30, 50, 70, 100 };
