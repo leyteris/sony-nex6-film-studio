@@ -256,6 +256,11 @@ final class Cam {
         String effect = resolveEffect(scaled.effect);
         wanted.put("color-mode", style);
         wanted.put("picture-effect", effect);
+        if ("neutral".equals(scaled.style) && "standard".equals(style)) {
+            int sat = neutralFallbackSat(scaled.sat, strength);
+            wanted.put("saturation", String.valueOf(sat));
+            Log8.event("STYLE", "neutral fallback standard sat=" + sat);
+        }
         try {
             setAll(wanted);
         } catch (Throwable t) {
@@ -357,9 +362,10 @@ final class Cam {
     }
 
     /** The wanted style, or the runtime spelling of it when the body advertises
-     *  a different name (mono/bw/monochrome). An unlisted value is still sent:
-     *  Sony ignores an unknown color-mode rather than rejecting the set, and the
-     *  read-back below is what decides the outcome. */
+     *  a different name (mono/bw/monochrome). Other unlisted values are still
+     *  sent: Sony ignores an unknown color-mode rather than rejecting the set,
+     *  and the read-back below is what decides the outcome. Neutral is the
+     *  exception: see styleOrFallback. */
     private String resolveStyle(String want) {
         try {
             Camera.Parameters p = camera.getParameters();
@@ -378,10 +384,30 @@ final class Cam {
                 }
             }
             Log8.event("STYLE", want + " not in " + values);
-            return want;
+            return styleOrFallback(values, want);
         } catch (Throwable t) {
             return want;
         }
+    }
+
+    /** NEX-6-generation bodies have no Neutral Creative Style and silently keep
+     *  the previous style when it is written, so Neutral falls back to Standard
+     *  there. Other unlisted values are still sent: the read-back decides. */
+    static String styleOrFallback(String values, String want) {
+        if ("neutral".equals(want) && values != null) {
+            String[] list = values.split(",");
+            for (int i = 0; i < list.length; i++) {
+                if ("neutral".equals(list[i].trim())) return want;
+            }
+            return "standard";
+        }
+        return want;
+    }
+
+    /** Standard minus saturation approximates Neutral's flat base; the cut
+     *  scales with strength like the look sliders and clamps at -3. */
+    static int neutralFallbackSat(int sat, int strength) {
+        return Math.max(-3, sat - Math.round(2 * strength / 100.0f));
     }
 
     private String readStyle() {
