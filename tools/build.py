@@ -20,8 +20,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / 'app'
 BUILD = ROOT / 'build-local/app'
-OUTPUT = ROOT / 'output/FilmStudioNex6-0.2.18-alpha.apk'
-VALIDATION = ROOT / 'validation/FilmStudioNex6-0.2.18-alpha.json'
+OUTPUT = ROOT / 'output/FilmStudioNex6-0.2.19-alpha.apk'
+VALIDATION = ROOT / 'validation/FilmStudioNex6-0.2.19-alpha.json'
 
 
 def sdk_root():
@@ -196,6 +196,7 @@ def main():
             'looks are live camera parameters (color mode, mono Picture Effect, saturation, contrast, sharpness, WB, DRO), not the 3D LUT engine',
             'the mode dial must stay on P/A/S/M: iAuto and SCN let the camera override Creative Style and Picture Effect, so the look does not land',
             'monochrome looks set color-mode=mono and a mono Picture Effect; when the effect is active the camera ignores Creative Style adjustments',
+            'bodies without a Neutral Creative Style (NEX-6 generation) fall back to Standard with an extra strength-scaled saturation cut for neutral-based looks; the STYLE log line records the fallback',
             'settings are applied only while the app is open and restored on exit',
             'center button or shutter saves the JPEG through the native camera; FSLOG reports whether a new DCIM file appeared',
             'UI starts at the full panel; DELETE or SK2 cycles full -> pill -> hidden with the live view always visible',
