@@ -1,52 +1,52 @@
 # 验证记录 / Validation
 
-当前发布候选：`FilmStudioNex6-0.2.18-alpha.apk`（versionCode 20）
+当前发布候选：`FilmStudioNex6-0.2.19-alpha.apk`（versionCode 21）
 
 ```text
-SHA-256 42c8033706d1b36d7f20f5ee6adc2bbd2d47b6fe6e222f2cbd6621260e49c44d
-size    81,094 bytes
+SHA-256 6450c4676599a1ca51c4e492f2ee31a56d2f37158a70c9b715789b07d385db6d
+size    81,318 bytes
 ```
 
 > **`camera_tested=false`。** 0.2.13 已在用户的 NEX-6 上启动过，卡上确实生成了 `REPORT.TXT` 与 `FSLOG.TXT`；但两次经相机 USB/MTP 和远程桌面复制出来的文件都是 100% NUL，无法读取内容，因此取景、拍摄、落卡、对焦、色彩与退出恢复在实机上**均未被验证**。下面的静态检查和模拟器结果不能证明这些行为在相机上可用。
 >
-> 0.2.15 在用户实机上有一个口头确认的观察：拨盘在 **iAuto / SCN** 时黑白风格依旧出彩色，转到 **P** 后正常出灰阶——这两种自动模式由相机接管创意风格与照片效果。这是用户报告，不是可读日志证据；0.2.16 据此在完整面板底部右侧加入 `P/A/S/M` 提示。0.2.17 新增两个徕卡参考 Look，风格总数为 17。0.2.18 依据用户实机反馈（CHROME/理光负片偏黄、CNEG 偏蓝）修复色温写入越界 bug，风格不再锁色温，改为 AWB + A-B 微调。`camera_tested` 仍为 `false`。
+> 0.2.15 在用户实机上有一个口头确认的观察：拨盘在 **iAuto / SCN** 时黑白风格依旧出彩色，转到 **P** 后正常出灰阶——这两种自动模式由相机接管创意风格与照片效果。这是用户报告，不是可读日志证据；0.2.16 据此在完整面板底部右侧加入 `P/A/S/M` 提示。0.2.17 新增两个徕卡参考 Look，风格总数为 17。0.2.18 依据用户实机反馈（CHROME/理光负片偏黄、CNEG 偏蓝）修复色温写入越界 bug，风格不再锁色温，改为 AWB + A-B 微调。0.2.19 为创意风格表不含 `neutral` 的机身（NEX-6 这一代）加入 Neutral 回退：风格表可读且缺 neutral 时改发 Standard 并按强度额外降饱和；模拟器假相机公布 null 表，回退不触发，由 14 项 host 单测覆盖。`camera_tested` 仍为 `false`。
 
 ## At a glance (English)
 
-- **Build**: `com.filmstudio.nex6`, `0.2.18-alpha`, versionCode 20, minSdk/targetSdk 10, dex 035, 11 APK entries, 81,094 bytes, v1 JAR signature accepted for min-sdk 10.
-- **Static**: all sources recompiled against the Android 2.3.3 (API 10) stub — 22 classes; the final dex references 35 `android.*` types and all 35 exist in the 2.3.3 stub; the resource table contains only `ic_launcher` and `app_name`; the APK contains dex code only, with no native libraries. The look table has 17 entries (10 Fujifilm-reference, 5 Ricoh/street, 2 Leica-reference). 0.2.18 removed the `wb`/`kelvin` fields and the color-temperature write path; UI strings and font subsets are unchanged.
-- **Emulator**: Android 37 at 640×480/160 installed this exact artifact (with `--bypass-low-target-sdk-block`). In the Simplified Chinese UI the full panel reached `LEICA-C` (`徕卡 经典`, card 16) and `LEICA-N` (`徕卡 自然`, card 17) without tofu, and the log recorded `APPLY LEICA-C 100% neutral cm=neutral`, `APPLY LEICA-N 100% standard cm=standard` and `APPLY LEICA-N 70% standard cm=standard`. The `P/A/S/M:风格` hint remained on the bottom tips line. Traditional Chinese showed `徠卡 自然` and English showed `LEICA-N Leica Look Natural`; the English run hit the emulator's intermittent camera-open failure, which is not an app crash. DISP opened the in-memory log (`LOG 35 4-35`) and MENU exited with `RESTORE ok`; the resulting `REPORT.TXT` was 2,016 bytes, 43 lines, 0 NUL. A second cold-boot session on 2026-11-10 stepped `LEICA-C` through 100/70/50/30% (highlighted chips plus four `APPLY LEICA-C <pct>% neutral cm=neutral` lines), exercised pill (`LEICA-C 经典 30%`), hidden and full stages, and exited with `RESTORE ok`; its `REPORT.TXT` was 1,667 bytes, 44 lines, 0 NUL. The 0.2.18 re-check (2026-11-10) confirmed the white-balance fix: `CHROME`/`GR-` and `CNEG`/`CROSS` now write `whitebalance=auto` with A-B +1/+2 instead of a color temperature, the parameter line reads `AWB A+1`, the log shows `APPLY CHROME 30/50/70/100% neutral cm=neutral` and `APPLY CNEG 100% neutral cm=neutral`, no `color-temperture-white-balance` write appears anywhere, and the session `REPORT.TXT` was 3,080 bytes, 72 lines, 0 NUL. The fake camera echoes values and cannot prove NEX-6 firmware accepts the Leica parameter set.
-- **Hardware**: two user-supplied NEX-6 sessions produced plausible card files (`REPORT.TXT` 2,853 B, `FSLOG.TXT` 21,562 B) but every copied byte was NUL. A later 0.2.15 session produced the mode-dial observation above (user report only). On 2026-11-10 the user reported on hardware that CHROME/GR- rendered too yellow and CNEG too blue — consistent with the pre-0.2.18 out-of-range color-temperature write (K×100); no readable log accompanies this report. No behavior is log-verified; `camera_tested=false`.
+- **Build**: `com.filmstudio.nex6`, `0.2.19-alpha`, versionCode 21, minSdk/targetSdk 10, dex 035, 11 APK entries, 81,318 bytes, v1 JAR signature accepted for min-sdk 10.
+- **Static**: all sources recompiled against the Android 2.3.3 (API 10) stub — 22 classes; the final dex references 35 deduplicated `android.*` types and all 35 exist in the 2.3.3 stub (plus 26 `java.*` core types, all API 1); the resource table contains only `ic_launcher` and `app_name`; the APK contains dex code only, with no native libraries. The look table has 17 entries (10 Fujifilm-reference, 5 Ricoh/street, 2 Leica-reference). 0.2.19 adds the Neutral→Standard fallback (`styleOrFallback`/`neutralFallbackSat`, 14 host unit tests); UI strings and font subsets are unchanged.
+- **Emulator**: Android 37 at 640×480/160 installed this exact artifact (with `--bypass-low-target-sdk-block`). In the Simplified Chinese UI the full panel reached `LEICA-C` (`徕卡 经典`, card 16) and `LEICA-N` (`徕卡 自然`, card 17) without tofu, and the log recorded `APPLY LEICA-C 100% neutral cm=neutral`, `APPLY LEICA-N 100% standard cm=standard` and `APPLY LEICA-N 70% standard cm=standard`. The `P/A/S/M:风格` hint remained on the bottom tips line. Traditional Chinese showed `徠卡 自然` and English showed `LEICA-N Leica Look Natural`; the English run hit the emulator's intermittent camera-open failure, which is not an app crash. DISP opened the in-memory log (`LOG 35 4-35`) and MENU exited with `RESTORE ok`; the resulting `REPORT.TXT` was 2,016 bytes, 43 lines, 0 NUL. A second cold-boot session on 2026-11-10 stepped `LEICA-C` through 100/70/50/30% (highlighted chips plus four `APPLY LEICA-C <pct>% neutral cm=neutral` lines), exercised pill (`LEICA-C 经典 30%`), hidden and full stages, and exited with `RESTORE ok`; its `REPORT.TXT` was 1,667 bytes, 44 lines, 0 NUL. The 0.2.18 re-check (2026-11-10) confirmed the white-balance fix: `CHROME`/`GR-` and `CNEG`/`CROSS` now write `whitebalance=auto` with A-B +1/+2 instead of a color temperature, the parameter line reads `AWB A+1`, the log shows `APPLY CHROME 30/50/70/100% neutral cm=neutral` and `APPLY CNEG 100% neutral cm=neutral`, no `color-temperture-white-balance` write appears anywhere, and the session `REPORT.TXT` was 3,080 bytes, 72 lines, 0 NUL. The 0.2.19 re-check (2026-11-10) confirmed the fallback stays inactive on the fake camera (`CAP color-mode=null`): `CHROME`/`CNEG` still read `AWB A+1`/`AWB A+2`, `APPLY … cm=neutral` echoes normally, no `STYLE neutral fallback` line appears, MENU exited with `RESTORE ok`, and the session `REPORT.TXT` was 3,516 bytes, 82 lines, 0 NUL; the fallback decision itself is covered by 14 host JVM unit tests. The fake camera echoes values and cannot prove NEX-6 firmware accepts the Leica parameter set.
+- **Hardware**: two user-supplied NEX-6 sessions produced plausible card files (`REPORT.TXT` 2,853 B, `FSLOG.TXT` 21,562 B) but every copied byte was NUL. A later 0.2.15 session produced the mode-dial observation above (user report only). On 2026-11-10 the user reported on hardware that CHROME/GR- rendered too yellow and CNEG too blue — consistent with the pre-0.2.18 out-of-range color-temperature write (K×100); no readable log accompanies this report. 0.2.19 adds a Standard fallback for bodies whose Creative Style list lacks `neutral`; the on-body style list (`CAP color-mode`) and the `STYLE` fallback line still need hardware confirmation. No behavior is log-verified; `camera_tested=false`.
 
 ## 1. 当前构建
 
 | 项目 | 结果 |
 | --- | --- |
 | 包名 | `com.filmstudio.nex6` |
-| 版本 | `0.2.18-alpha` / versionCode 20 |
+| 版本 | `0.2.19-alpha` / versionCode 21 |
 | 显示名 | Film Studio NEX-6 |
 | minSdk / targetSdk | 10 / 10 |
 | dex | `dex\n035` |
 | APK 条目 | 11 |
-| 大小 | 81,094 bytes |
-| SHA-256 | `42c8033706d1b36d7f20f5ee6adc2bbd2d47b6fe6e222f2cbd6621260e49c44d` |
+| 大小 | 81,318 bytes |
+| SHA-256 | `6450c4676599a1ca51c4e492f2ee31a56d2f37158a70c9b715789b07d385db6d` |
 | 签名 | v1 JAR，SHA-1，RSA；`apksigner verify --min-sdk-version 10` 通过 |
 | 证书 | `CN=SonyPMCADebug`（本地开发证书，SHA-256 `72f30a1a…d133`） |
 | 资源表 | 仅 `drawable/ic_launcher`、`string/app_name` |
 | 字体 | `NotoSansSC-UI.ttf` 33,420 B；`NotoSansTC-UI.ttf` 36,488 B；各附 OFL 1.1 |
 | `camera_tested` | **false** |
 
-`0.2.18` 是白平衡修复版，风格表与 0.2.17 相同（17 个）：
+`0.2.19` 是 Neutral 回退版，风格表与 0.2.17 相同（17 个），0.2.18 的白平衡修复（AWB + A-B）保留：
 
-1. **Bug**：0.2.17 及之前，带色温的风格把 `color-temperture-white-balance` 写成 K×100（`5600` → `560000`），远超 Sony 公布的 2500–9900 范围；模拟器假相机原样回显、从不校验，实机固件行为不可预测。用户实机反馈：`CHROME`/`GR-` 明显偏黄、`CNEG` 明显偏蓝；
-2. **修复**：风格不再锁色温。17 个风格一律写 `whitebalance=auto`；`CHROME`/`GR-` 用 A-B +1，`CNEG`/`CROSS` 用 A-B +2（琥珀为正、直接写入、写后回读，被固件丢弃则记入 `DROPPED`）。方向对齐 a5100 上游的「滤镜不会锁定白平衡」；
-3. **界面**：顶部参数行由 `5600K A+1` 变为 `AWB A+1`；低强度对 A-B 的线性缩放不变（30%/50% 时 ±1/±2 舍入为 0/1）；
-4. **代码**：删除 `wb`/`kelvin` 字段与色温写入路径；用户自己的色温参数仍随原参数捕获并在退出时恢复；不新增类，界面文案与字体子集不变；
-5. **版本**：Manifest 升至 `0.2.18-alpha` / versionCode 20，`tools/build.py`、CI 产物名与文档同步，`validation/` 只保留本版 JSON。
+1. **问题**：NEX-6 这一代创意风格表（标准/生动/肖像/风景/黄昏/夜景/红叶/黑白/棕褐色）没有 `neutral`，而 Sony 对未知 `color-mode` 静默忽略——CHROME/PRONEG/CNEG/ETERNA/BLEACH/GR-/LEICA-C 七个中性底风格在实机上会保留上一个风格的基调；模拟器假相机回显任意值，看不出该问题；
+2. **回退**：固件公布的 `color-mode-values` 可读且不含 `neutral` 时改发 `standard`，并额外降饱和 2×强度（四舍五入、clamp 到 -3），降饱和与滑块一样随强度线性缩放；日志记 `STYLE neutral fallback standard sat=…`；
+3. **边界**：风格表不可读（null，如模拟器）时行为不变，照发 `neutral` 并由回读决定；固件公布 `neutral` 时照旧；其他未列出的值仍照发（Sony 静默忽略，降级会让 `mono` 永远变彩色）；
+4. **代码**：回退判定与饱和计算为纯静态方法（`styleOrFallback` / `neutralFallbackSat`），14 项 host 单测全过；不新增类，界面文案与字体子集不变；
+5. **版本**：Manifest 升至 `0.2.19-alpha` / versionCode 21，`tools/build.py`、CI 产物名与文档同步，`validation/` 只保留本版 JSON。
 
 `0.2.16` 的底部 `P/A/S/M` 模式提示与 `0.2.15` 的黑白双路径保持不变：ACROS/HCBW/MORI 同时写 `color-mode=mono` 和单色 `picture-effect`（ACROS 为 `richtone-mono`，HCBW/MORI 为 `rough-mono`），两值都回读；未单色时先轮换 `mono` 别名重试 `color-mode`，仍失败再重试效果。照片效果开启时 Sony 忽略创意风格滑块，黑白强度可能不再改变对比，这是为保证灰阶接受的取舍。
 
-下面的静态检查针对最终 `42c80337…c44d` 执行；第 3.1–3.5 节是 0.2.17 构建（`2e0a3be4…464d`）的模拟器记录，3.6 为 0.2.18 白平衡修复后的复验。
+下面的静态检查针对最终 `6450c467…db6d` 执行；第 3.1–3.5 节是 0.2.17 构建（`2e0a3be4…464d`）的模拟器记录，3.6 为 0.2.18 白平衡修复后的复验，3.7 为 0.2.19 Neutral 回退的复验。
 
 ## 2. 静态验收
 
@@ -60,7 +60,7 @@ javac -source 8 -target 8
 app/src/com/filmstudio/nex6/*.java
 ```
 
-结果：22 个 class（含内部类），编译通过。`0.2.18` 只删除 `Looks` 的 `wb`/`kelvin` 字段与 `Cam` 的色温写入分支，不新增类，class 数与 0.2.17 相同。任何 API 11+ 的 `android.*` 类型或方法都会在这一步失败；此前的 `KEYCODE_FORWARD_DEL`（API 11）就是这样被发现并移除的。
+结果：22 个 class（含内部类），编译通过。`0.2.19` 只在 `Cam` 增加两个静态方法与一个回退分支，不新增类，class 数与 0.2.17/0.2.18 相同。任何 API 11+ 的 `android.*` 类型或方法都会在这一步失败；此前的 `KEYCODE_FORWARD_DEL`（API 11）就是这样被发现并移除的。
 
 ### 2.2 dex 类型审计
 
@@ -69,9 +69,10 @@ app/src/com/filmstudio/nex6/*.java
 ```text
 android refs: 35
 missing in 2.3.3 stub: 0
+java refs: 26 (all core, API 1)
 ```
 
-35 个类型包括 `Activity`、`Context`、`SharedPreferences`、`PackageManager`、`AssetManager`、`Camera` 及其 `AutoFocusCallback`/`Parameters`/`PictureCallback`/`ShutterCallback`/`Size`、`Canvas`、`Paint`、`Rect`、`RectF`、`Typeface`、`Build.VERSION`、`Bundle`、`Environment`、`Handler`、`SystemClock`、`Log`、`KeyEvent`、`SurfaceHolder`/`Callback`、`SurfaceView`、`View`、`ViewGroup.LayoutParams`、`Window`、`FrameLayout`/`LayoutParams`。
+35 个类型按类描述符去重（含内部类）：`Activity`；`Context`、`SharedPreferences`/`Editor`、`PackageInfo`、`PackageManager`、`AssetManager`；`Canvas`、`Paint`/`Align`/`Style`、`Rect`、`RectF`、`Typeface`；`Camera` 及其 `AutoFocusCallback`/`Parameters`/`PictureCallback`/`ShutterCallback`/`Size`；`Build.VERSION`、`Bundle`、`Environment`、`Handler`、`SystemClock`；`Log`；`KeyEvent`、`SurfaceHolder`/`Callback`、`SurfaceView`、`View`、`ViewGroup.LayoutParams`、`Window`；`FrameLayout`/`LayoutParams`。26 个 `java.*` 类型为 `String`/`Object`/`Math`/`File`/`Thread`/`SimpleDateFormat`/`LinkedHashMap` 等核心类型，API 1 已有。该计数与早期版本记录的 35 一致（均为去重口径）。
 
 ### 2.3 资源与清单
 
@@ -90,7 +91,7 @@ NotoSansSC-UI.ttf  33,420 B  167 请求字符（95 ASCII + 72 简体）
 NotoSansTC-UI.ttf  36,488 B  168 请求字符（95 ASCII + 73 繁体）
 ```
 
-逐字校验：SC 字体包含全部简体用字，TC 字体包含全部繁体用字；SC 字体只缺繁体变体，TC 字体只缺简体变体（预期）。0.2.17 新增的 `富士`、`徕卡`/`徠卡`、`自然` 与 `经典`/`經典` 已逐字确认在对应 cmap 中，APK 内字体与 `app/assets/` 字节一致。0.2.18 参数行由 `5600K` 变为 `AWB`（纯 ASCII），界面文案不变，字体子集字节不变。0.2.14 的简体启动记录仍然适用：
+逐字校验：SC 字体包含全部简体用字，TC 字体包含全部繁体用字；SC 字体只缺繁体变体，TC 字体只缺简体变体（预期）。0.2.17 新增的 `富士`、`徕卡`/`徠卡`、`自然` 与 `经典`/`經典` 已逐字确认在对应 cmap 中，APK 内字体与 `app/assets/` 字节一致。0.2.18 参数行由 `5600K` 变为 `AWB`（纯 ASCII），界面文案不变，字体子集字节不变。0.2.19 只改参数写入与日志，界面文案不变，字体子集字节不变。0.2.14 的简体启动记录仍然适用：
 
 ```text
 FONT fonts/NotoSansSC-UI.ttf ok script=zh-CN
@@ -211,12 +212,36 @@ APPLY LEICA-C 30% neutral cm=neutral
 
 ![DISP 屏内日志：CHROME 四档强度与 CNEG](images/wb-overlay.png)
 
-### 3.7 模拟器不能验证的内容
+### 3.7 0.2.19 Neutral 回退复验
+
+`2026-11-10` 在 0.2.19 构建（`6450c467…db6d`）上冷启动，简体中文，640×480/160。回退分支在模拟器上无法触发（假相机 `color-mode-values=null`），因此验证分两层：
+
+**Host 单测（14 项，全过）**：`styleOrFallback` / `neutralFallbackSat` 为纯静态方法，用 API 10 stub 编译后直接在 host JVM 运行：
+
+- null 风格表 → 照发 `neutral`（模拟器路径）；
+- NEX-6 风格表 `standard,vivid,portrait,landscape,sunset,night,red-leaves,mono,sepia` → `standard`；
+- 含 `neutral` 的表 → 保留 `neutral`；列表项空格 trim；`vivid`/`mono` 不受影响；
+- 饱和：`-1`@100% → `-3`，@70/50/30% → `-2`；`-2`/`-3`@100% clamp 到 `-3`；`0`@100% → `-2`，`0`@30% → `-1`。
+
+**模拟器复验（主路径不变）**：
+
+- `CHROME` 参数行仍为 `NEUTRAL S-1 C+1 R+0 AWB A+1 DRO auto`，`CNEG` 为 `AWB A+2`；`CAP color-mode=null` 确认假相机不公布风格表，回退不触发，`APPLY CHROME … cm=neutral` / `APPLY CNEG … cm=neutral` 回显正常；
+- 整份 `REPORT.TXT` 无 `STYLE neutral fallback` 行（预期）、无 `DROPPED`、无 `SET-` 失败；
+- MENU 退出 `RESTORE ok`；该会话 `REPORT.TXT` 3,516 字节、82 行、0 个 NUL。
+
+![CHROME 参数行（Android 37 模拟器，简体中文，0.2.19）](images/fallback-0219-chrome.png)
+
+![DISP 屏内日志：CAP color-mode=null 与 APPLY 回显（0.2.19）](images/fallback-0219-log.png)
+
+实机需要确认的是：`CAP color-mode=…` 的风格表内容、是否出现 `STYLE neutral fallback standard sat=…`，以及七个中性底风格的成片基调。
+
+### 3.8 模拟器不能验证的内容
 
 - NEX-6 的真实 Sony 扫描码、拨轮方向和 S1/S2 行为；模拟器没有 DISP 的原始扫描码，只能用 keyCode 165 经 `fallback()` 映射为 608（日志仍记 `scan=608`）；
 - 真实拨盘位置与 iAuto/SCN 下相机接管风格的固件行为；模拟器没有模式拨盘，`P/A/S/M` 提示的语义只能由实机确认；
 - CameraEx 的 `takePicture` 落卡时序与 `cancelTakePicture`；
 - `color-mode=mono` 与 `picture-effect=richtone-mono/rough-mono` 在 NEX-6 固件上的实际接受情况（模拟器假相机会回显任意值，且不公布效果值）；
+- NEX-6 真实的 `color-mode-values` 风格表与 Neutral 回退分支：假相机公布 null，回退在模拟器上无法触发，host 单测只覆盖判定与饱和计算；
 - A-B/G-M 微调、DRO 在 NEX-6 固件上的实际接受情况（0.2.18 起风格不再写色温）；
 - 预览比例、方向和快门后的恢复；
 - 对焦失败（红色）路径；
@@ -245,16 +270,16 @@ APPLY LEICA-C 30% neutral cm=neutral
 - 它**不足以**把 `camera_tested` 改为 `true`，落卡、对焦、拍摄与退出恢复仍未验证；
 - 0.2.16 因此在完整面板底部右侧加入 `P/A/S/M:风格` 提示，并在 README / INSTALL / COMPATIBILITY 中写明拨盘要求。
 
-### 4.2 0.2.18 实机首轮检查
+### 4.2 0.2.19 实机首轮检查
 
 0. 先把模式拨盘置于 **P / A / S / M**，确认底部右侧显示 `P/A/S/M:风格`；iAuto / SCN 下提示仍在，但风格不会生效；
-1. 启动后按 DISP，确认屏内日志出现，并记录 `CAP picture-effect=…`；
+1. 启动后按 DISP，确认屏内日志出现，并记录 `CAP color-mode=…`（风格表）与 `CAP picture-effect=…`；
 2. 依次选择 ACROS / HCBW / MORI，记录右上角的 `CM … FX …`，并对屏内日志拍照：
    - 两者都是单色（如 `CM mono FX richtone-mono`）：两路至少一路生效；
    - `CM standard FX off`：两路都被固件丢弃，记录 `APPLY`、`DROPPED`，看是否有 `MONO retry …`；
    - 只有其一为单色：另一路被丢弃，仍应以灰阶为准；
 3. 记录 `PROBE REPORT.TXT ... text=…` 与 `PROBE FSLOG.TXT ... text=…`；
-4. 遍历 17 个风格/4 档强度，记录 `APPLY` / `DROPPED` / `STYLE` / `EFFECT`；重点新增 `LEICA-C`（`neutral`，`S-1 C-1 R+0`）与 `LEICA-N`（`standard`，`S+0 C+0 R+0`），确认相机接受 `neutral` / `standard` 且成片有可辨差异，不要求与上游 LUT 逐像素一致；注意照片效果开启时创意风格滑块被忽略，黑白强度可能不改变对比；0.2.18 另需重点核对 `CHROME`/`GR-`（AWB A+1）与 `CNEG`/`CROSS`（AWB A+2）：此前反馈的偏黄/偏蓝应消失，成片跟随 AWB，并检查 `DROPPED` 是否出现 `light-balance-for-white-balance`；
+4. 遍历 17 个风格/4 档强度，记录 `APPLY` / `DROPPED` / `STYLE` / `EFFECT`；重点新增 `LEICA-C`（`neutral`，`S-1 C-1 R+0`）与 `LEICA-N`（`standard`，`S+0 C+0 R+0`），确认相机接受 `neutral` / `standard` 且成片有可辨差异，不要求与上游 LUT 逐像素一致；注意照片效果开启时创意风格滑块被忽略，黑白强度可能不改变对比；0.2.18 另需重点核对 `CHROME`/`GR-`（AWB A+1）与 `CNEG`/`CROSS`（AWB A+2）：此前反馈的偏黄/偏蓝应消失，成片跟随 AWB，并检查 `DROPPED` 是否出现 `light-balance-for-white-balance`；0.2.19 另需重点核对七个中性底风格（CHROME/PRONEG/CNEG/ETERNA/BLEACH/GR-/LEICA-C）：若 `CAP color-mode` 不含 `neutral`，日志应出现 `STYLE neutral fallback standard sat=…`、右上角 `CM standard`，成片基调应为降饱和的 Standard 而不是保留上一个风格；若风格表含 `neutral` 则仍应为 `CM neutral`；
 5. 半按 S1、中央键/快门拍摄，检查成片是否为灰阶，记录 `FOCUS` 与 `SAVED`；
 6. 三阶段 UI、简/繁中文；
 7. MENU/BACK 退出并恢复；
@@ -285,9 +310,10 @@ APPLY LEICA-C 30% neutral cm=neutral
 | 0.2.15-alpha | 17 | 79,207 | `eccb2b1e31f5` | 黑白双路径：`mono` + 单色照片效果、别名解析与回读重试 |
 | 0.2.16-alpha | 18 | 79,339 | `5cc4e4da0777` | 完整面板底部右侧 `P/A/S/M` 模式提示（iAuto/SCN 会接管风格） |
 | 0.2.17-alpha | 19 | 81,270 | `2e0a3be4ab88` | 新增徕卡参考 Look `LEICA-C` / `LEICA-N`，风格总数 17；重生成字体子集 |
-| **0.2.18-alpha** | **20** | **81,094** | **`42c8033706d1`** | **修复色温 ×100 越界写入；CHROME/GR-/CNEG/CROSS 改为 AWB + A-B 偏移** |
+| 0.2.18-alpha | 20 | 81,094 | `42c8033706d1` | 修复色温 ×100 越界写入；CHROME/GR-/CNEG/CROSS 改为 AWB + A-B 偏移 |
+| **0.2.19-alpha** | **21** | **81,318** | **`6450c4676599`** | **Neutral 回退：风格表无 neutral 时改发 Standard + 按强度额外降饱和** |
 
-当前版本的完整元数据在 `validation/FilmStudioNex6-0.2.18-alpha.json`，记录 `camera_tested=false`。历史版本只保留上表摘要，完整旧 JSON 存放在本地 `legacy/validation-history/`，不随仓库发布。
+当前版本的完整元数据在 `validation/FilmStudioNex6-0.2.19-alpha.json`，记录 `camera_tested=false`。历史版本只保留上表摘要，完整旧 JSON 存放在本地 `legacy/validation-history/`，不随仓库发布。
 
 早期“给 a5100 APK 打补丁”的 NEX-6 路线（0.3.x-alpha-nex6）不属于本仓库，源码和验证资料保存在本地 `legacy/a5100/`，不随新仓库发布。
 

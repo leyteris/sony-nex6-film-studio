@@ -1,5 +1,14 @@
 # 版本历史
 
+## 0.2.19-alpha — 2026-11-10
+
+- 新增 Neutral 回退：NEX-6 这一代创意风格表没有 `neutral`（标准/生动/肖像/风景/黄昏/夜景/红叶/黑白/棕褐色），而 Sony 对未知 `color-mode` 静默忽略，导致 CHROME/PRONEG/CNEG/ETERNA/BLEACH/GR-/LEICA-C 七个中性底风格会保留上一个风格的基调；现在固件公布的 `color-mode-values` 可读且不含 `neutral` 时改发 `standard` 并额外降饱和 2×强度（clamp 到 -3），日志记 `STYLE neutral fallback standard sat=…`；
+- 风格表不可读（null，如模拟器）时行为不变：照发 `neutral` 并由回读决定；固件公布 `neutral` 时照旧；其他未列出的值仍照发；
+- 回退判定与饱和计算为纯静态方法（`styleOrFallback` / `neutralFallbackSat`），14 项 host 单测全过（NEX-6 风格表、含 neutral 的表、null 表、空格 trim、饱和 clamp 与四档强度）；
+- Manifest 升至 `0.2.19-alpha` / versionCode 21；`tools/build.py`、CI 产物名、README、安装文档与 `validation/` 同步；构建元数据新增一条 Neutral 回退 limitation；
+- 构建与验证：`6450c467…db6d`、81,318 B、11 个 APK 条目、v1 签名；22 个 class、35 个 `android.*` 类型、0 缺失、dex 035（另 26 个 `java.*` 核心类型，均为 API 1 已有）；Android 37 模拟器（简体中文，640×480）复验 CHROME/CNEG 参数行 `AWB A+1`/`AWB A+2`、`CAP color-mode=null` 时回退不触发、`APPLY … cm=neutral` 回显正常、MENU 退出 `RESTORE ok`，`REPORT.TXT` 3,516 字节、82 行、0 个 NUL；
+- 已知：`camera_tested=false`；实机需看 `CAP color-mode=…` 风格表与是否出现 `STYLE neutral fallback`，并确认七个中性底风格的成片基调。
+
 ## 0.2.18-alpha — 2026-11-10
 
 - 修复白平衡写入 bug：带色温的风格此前把 `color-temperture-white-balance` 写成 K×100（`5600` → `560000`），远超 Sony 2500–9900 的合法范围，固件行为不可预测；用户实机反馈 `CHROME`/`GR-` 明显偏黄、`CNEG` 明显偏蓝，与此一致；

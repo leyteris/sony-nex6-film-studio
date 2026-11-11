@@ -1,6 +1,6 @@
 # 架构与实现：Film Studio NEX-6
 
-状态：`0.2.18-alpha` 独立外壳已实现，静态验收和模拟器冒烟测试通过；0.2.13 已在用户的 NEX-6 上启动并写卡，但回传日志全 NUL，**各项行为在实机上均未验证**（`camera_tested=false`）。用户在 0.2.15 实机上确认：拨盘在 iAuto / SCN 时黑白出彩色，P/A/S/M 下正常——0.2.16 因此加入底部 `P/A/S/M` 提示。0.2.17 增加两个徕卡参考 Look（经典、自然），风格总数为 17。0.2.18 修复色温写入越界（曾把 K×100 发给相机），风格不再锁色温，改为 AWB + A-B 微调。目标机型为 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。
+状态：`0.2.19-alpha` 独立外壳已实现，静态验收和模拟器冒烟测试通过；0.2.13 已在用户的 NEX-6 上启动并写卡，但回传日志全 NUL，**各项行为在实机上均未验证**（`camera_tested=false`）。用户在 0.2.15 实机上确认：拨盘在 iAuto / SCN 时黑白出彩色，P/A/S/M 下正常——0.2.16 因此加入底部 `P/A/S/M` 提示。0.2.17 增加两个徕卡参考 Look（经典、自然），风格总数为 17。0.2.18 修复色温写入越界（曾把 K×100 发给相机），风格不再锁色温，改为 AWB + A-B 微调。0.2.19 为中性底风格加入回退：固件风格表不含 neutral 时改发 standard 并额外降饱和。目标机型为 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。
 
 > **English summary.** Film Studio NEX-6 is a standalone PMCA app for the first-generation Sony NEX-6. The a5100 Film Studio engine depends on `CameraEx.setRGBMatrix` and the extended gamma table, which the NEX-6 firmware does not expose. This app therefore keeps the Film Studio look list but expresses each look with runtime `Camera.Parameters` the NEX-6 does accept. It is a plain `Activity` + `SurfaceView` + hand-drawn `Canvas` overlay, with every Sony class reached through reflection. It is an approximation, not a LUT or matrix/gamma port.
 
@@ -38,7 +38,7 @@ native_color_preview_available: false
 
 | 能力 | 运行时 key | 取值 |
 | --- | --- | --- |
-| 创意风格 | `color-mode` | standard / vivid / neutral / portrait / landscape / mono / sunset / sepia 等 |
+| 创意风格 | `color-mode` | standard / vivid / neutral / portrait / landscape / mono / sunset / sepia 等；NEX-6 无 neutral 时回退 standard + 额外降饱和（0.2.19） |
 | 对比度 | `contrast` | -3..+3 |
 | 饱和度 | `saturation` | -3..+3 |
 | 锐度 | `sharpness` | -3..+3 |
@@ -51,6 +51,8 @@ native_color_preview_available: false
 | 矩阵模式 | `rgb-matrix-mode` | 仅在相机暴露该 key 时写 `false` |
 
 `color-mode` 不再把固件未列出的值降级为 `standard`：Sony 对未知值是静默忽略而不是抛错，降级会让 `mono` 永远变成彩色。现在按风格表发送目标值（含 `mono`/`bw`/`blackwhite` 等别名匹配），`setParameters()` 后回读 `color-mode`。
+
+Neutral 是唯一例外（0.2.19）：NEX-6 这一代创意风格表没有中性，静默忽略会让七个中性底风格保留上一个风格的基调。固件公布的 `color-mode-values` 可读且不含 `neutral` 时改发 `standard`，饱和度再减 `2×强度`（clamp 到 -3）以近似中性的低饱和底，日志记 `STYLE neutral fallback standard sat=…`；表不可读（null）或含 `neutral` 时照发目标值。判定与饱和计算是纯静态方法，host 单测覆盖。
 
 黑白风格再加一条独立路径：ACROS 同时写 `picture-effect=richtone-mono`，HCBW / MORI 写 `rough-mono`。Picture Effect 由相机自己的图像管线处理，不依赖 Creative Style 是否接受 `mono`；只要两路中有一路被保留，成片就应是灰阶。两路都回读并显示在右上角（`CM mono FX richtone-mono`）。效果开启时相机忽略创意风格滑块，因此低强度对对比/锐度的缩放在效果路径下可能不生效——这是为保证黑白而接受的取舍。`rgb-matrix-mode` 未知时不写，避免整个参数包被拒绝。
 
@@ -80,7 +82,7 @@ MainActivity (Activity)
 | `Lang.java` | 简/繁/英界面文本与内置字体选择 |
 | `Log8.java` | 8.3 安全路径上的尽力日志、回读探针与内存快照 |
 
-编译后共 22 个 class（含内部类与匿名回调），只引用 35 个 `android.*` 类型，全部存在于 Android 2.3.3 stub。
+编译后共 22 个 class（含内部类与匿名回调）；dex 类描述符去重后引用 35 个 `android.*` 类型，全部存在于 Android 2.3.3 stub，另 26 个 `java.*` 核心类型均为 API 1 已有。
 
 ## 5. 17 个风格
 

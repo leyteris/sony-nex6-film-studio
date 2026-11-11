@@ -4,7 +4,7 @@
 
 A standalone, unofficial film-look app for the **Sony NEX-6**. It expresses the seventeen Film Studio looks with runtime camera parameters the NEX-6 actually accepts, draws its own control overlay over the live view, and restores the camera's original parameters on exit.
 
-> **Status: `0.2.18-alpha` (versionCode 20), no readable NEX-6 hardware logs yet.** 0.2.13 did start on a NEX-6 and wrote its card files, but the retrieved `REPORT.TXT`/`FSLOG.TXT` arrived as all-NUL over MTP. A 0.2.15 check on hardware confirmed the missing premise: with the mode dial in iAuto / SCN the monochrome looks still rendered in color, while P produced grayscale — those auto modes hand Creative Style and Picture Effect back to the camera. 0.2.16 therefore adds an orange `P/A/S/M: STYLE` hint at the right of the bottom tips line and keeps the 0.2.15 dual mono path. 0.2.17 adds two Leica-reference looks (Classic, Natural), bringing the total to 17. 0.2.18 fixes the out-of-range color-temperature write (the camera used to receive K×100 values such as 560000): the four Kelvin looks no longer lock white balance and use AWB with an A-B shift instead, which should remove the yellow cast reported on CHROME/GR- and the blue cast on CNEG, pending hardware re-check. The build, API-10 static checks and Android 37 emulator smoke tests are complete; `camera_tested=false`. Until on-camera evidence exists, this project makes no compatibility or usability claim.
+> **Status: `0.2.19-alpha` (versionCode 21), no readable NEX-6 hardware logs yet.** 0.2.13 did start on a NEX-6 and wrote its card files, but the retrieved `REPORT.TXT`/`FSLOG.TXT` arrived as all-NUL over MTP. A 0.2.15 check on hardware confirmed the missing premise: with the mode dial in iAuto / SCN the monochrome looks still rendered in color, while P produced grayscale — those auto modes hand Creative Style and Picture Effect back to the camera. 0.2.16 therefore adds an orange `P/A/S/M: STYLE` hint at the right of the bottom tips line and keeps the 0.2.15 dual mono path. 0.2.17 adds two Leica-reference looks (Classic, Natural), bringing the total to 17. 0.2.18 fixes the out-of-range color-temperature write (the camera used to receive K×100 values such as 560000): the four Kelvin looks no longer lock white balance and use AWB with an A-B shift instead, which should remove the yellow cast reported on CHROME/GR- and the blue cast on CNEG, pending hardware re-check. 0.2.19 adds a Neutral fallback: the NEX-6 generation has no Neutral Creative Style and Sony silently ignores unknown styles, so when the firmware's readable style list lacks `neutral` the seven neutral-based looks switch to Standard with an extra strength-scaled saturation cut, logged as `STYLE neutral fallback`. The build, API-10 static checks and Android 37 emulator smoke tests are complete; `camera_tested=false`. Until on-camera evidence exists, this project makes no compatibility or usability claim.
 
 ## Scope
 
@@ -93,11 +93,11 @@ Prerequisites:
 2. Wi-Fi ADB is enabled on the camera (Sony-PMCA-RE / OpenMemories: Tweak).
 3. Android Platform-Tools are installed on the computer.
 
-Download `FilmStudioNex6-0.2.18-alpha.apk` from the Releases page (built by CI on tag `0.2.18`), or use the local build at `output/FilmStudioNex6-0.2.18-alpha.apk`, then run:
+Download `FilmStudioNex6-0.2.19-alpha.apk` from the Releases page (built by CI on tag `0.2.19`), or use the local build at `output/FilmStudioNex6-0.2.19-alpha.apk`, then run:
 
 ```sh
 adb connect CAMERA_IP:5555
-adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.18-alpha.apk
+adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.19-alpha.apk
 ```
 
 `CAMERA_IP` is a placeholder; replace it with the address currently shown on the camera and keep the `:5555` port. Mask the real IP before sharing screenshots or logs.
@@ -105,7 +105,7 @@ adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.18-alpha.apk
 SHA-256 of the current build:
 
 ```text
-42c8033706d1b36d7f20f5ee6adc2bbd2d47b6fe6e222f2cbd6621260e49c44d
+6450c4676599a1ca51c4e492f2ee31a56d2f37158a70c9b715789b07d385db6d
 ```
 
 This SHA-256 belongs to the locally signed `output/` build. The CI release APK is signed with a throwaway debug key: its signature and checksum differ, so use the `SHA256SUMS.txt` attached to that release. The two cannot update each other in place.
@@ -147,7 +147,7 @@ Requirements: JDK 17, Android SDK build-tools 36.0.0, `platforms/android-37.0/an
 python3 tools/build.py
 ```
 
-The APK is written to `output/FilmStudioNex6-0.2.18-alpha.apk` and a metadata file to `validation/FilmStudioNex6-0.2.18-alpha.json`. Signing uses the local `.private/signing.pem`, which is never committed or uploaded. If it is missing, the script signs with a throwaway debug key; that signature differs and cannot update an installed release in place.
+The APK is written to `output/FilmStudioNex6-0.2.19-alpha.apk` and a metadata file to `validation/FilmStudioNex6-0.2.19-alpha.json`. Signing uses the local `.private/signing.pem`, which is never committed or uploaded. If it is missing, the script signs with a throwaway debug key; that signature differs and cannot update an installed release in place.
 
 GitHub Actions ([.github/workflows/build.yml](.github/workflows/build.yml)) runs the API-10 compile gate and builds the APK on every push and pull request, then uploads it as a workflow artifact. Pushing any tag (for example `0.2.17`) also creates a pre-release containing the APK, `SHA256SUMS.txt` and the validation JSON. CI has no signing key, so both the artifact and the release APK are debug-signed and are meant for testing only; they cannot update an installed local or release build.
 
