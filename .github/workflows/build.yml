@@ -52,19 +52,19 @@ jobs:
 
       - name: Record SHA-256
         working-directory: output
-        run: sha256sum FilmStudioNex6-0.2.18-alpha.apk | tee SHA256SUMS.txt
+        run: sha256sum FilmStudioNex6-0.2.19-alpha.apk | tee SHA256SUMS.txt
 
       - name: Stage release files
         run: |
           mkdir -p dist
-          cp output/FilmStudioNex6-0.2.18-alpha.apk dist/
+          cp output/FilmStudioNex6-0.2.19-alpha.apk dist/
           cp output/SHA256SUMS.txt dist/
-          cp validation/FilmStudioNex6-0.2.18-alpha.json dist/
+          cp validation/FilmStudioNex6-0.2.19-alpha.json dist/
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: FilmStudioNex6-0.2.18-alpha-debug-signed
+          name: FilmStudioNex6-0.2.19-alpha-debug-signed
           path: dist/
           if-no-files-found: error
 
@@ -78,7 +78,7 @@ jobs:
       - name: Download APK
         uses: actions/download-artifact@v4
         with:
-          name: FilmStudioNex6-0.2.18-alpha-debug-signed
+          name: FilmStudioNex6-0.2.19-alpha-debug-signed
           path: dist
 
       - name: Create GitHub release
@@ -89,9 +89,10 @@ jobs:
           cat > "$RUNNER_TEMP/release-notes.md" <<EOF
           Experimental Sony NEX-6 build from tag ${GITHUB_REF_NAME}.
 
-          - Version: 0.2.18-alpha (versionCode 20), Android 2.3.7 / API 10
+          - Version: 0.2.19-alpha (versionCode 21), Android 2.3.7 / API 10
           - 17 looks: 10 Fujifilm-reference, 5 Ricoh/street, 2 Leica Look reference
           - White balance fix: looks no longer lock color temperature; CHROME/GR- use AWB A+1, CNEG/CROSS AWB A+2
+          - Neutral fallback: bodies whose Creative Style list lacks neutral (NEX-6 generation) use Standard plus an extra strength-scaled saturation cut for the seven neutral-based looks
           - camera_tested=false: nothing has been validated on a real camera; see docs/VALIDATION.md
           - Keep the mode dial on P/A/S/M; iAuto and SCN let the camera override Creative Style and Picture Effect
           - Use DISP for the on-body log; card logs may read back as all NUL over USB/MTP
@@ -103,6 +104,6 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             --verify-tag \
             --prerelease \
-            --title "Film Studio NEX-6 0.2.18-alpha (CI debug build)" \
+            --title "Film Studio NEX-6 0.2.19-alpha (CI debug build)" \
             --notes-file "$RUNNER_TEMP/release-notes.md" \
             dist/*.apk dist/SHA256SUMS.txt dist/*.json
