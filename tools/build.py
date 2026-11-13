@@ -20,8 +20,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / 'app'
 BUILD = ROOT / 'build-local/app'
-OUTPUT = ROOT / 'output/FilmStudioNex6-0.2.19-alpha.apk'
-VALIDATION = ROOT / 'validation/FilmStudioNex6-0.2.19-alpha.json'
+OUTPUT = ROOT / 'output/FilmStudioNex6-0.2.20-alpha.apk'
+VALIDATION = ROOT / 'validation/FilmStudioNex6-0.2.20-alpha.json'
 
 
 def sdk_root():
@@ -195,7 +195,7 @@ def main():
         'limitations': [
             'looks are live camera parameters (color mode, mono Picture Effect, saturation, contrast, sharpness, WB, DRO), not the 3D LUT engine',
             'the mode dial must stay on P/A/S/M: iAuto and SCN let the camera override Creative Style and Picture Effect, so the look does not land',
-            'monochrome looks set color-mode=mono and a mono Picture Effect; when the effect is active the camera ignores Creative Style adjustments',
+            'ACROS and HCBW set color-mode=mono plus a mono Picture Effect, which makes the camera ignore Creative Style adjustments; MORI uses color-mode=mono with contrast/sharpness sliders and falls back to rough-mono only if the body rejects mono',
             'bodies without a Neutral Creative Style (NEX-6 generation) fall back to Standard with an extra strength-scaled saturation cut for neutral-based looks; the STYLE log line records the fallback',
             'settings are applied only while the app is open and restored on exit',
             'center button or shutter saves the JPEG through the native camera; FSLOG reports whether a new DCIM file appeared',
