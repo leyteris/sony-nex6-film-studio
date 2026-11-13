@@ -74,7 +74,10 @@ final class Looks {
             new Look("GR+", "Ricoh GR Positive", 0xFF7FA36B, "vivid", +1, +1, +1, 0, 0, "auto"),
             new Look("GR-", "Ricoh Negative Film", 0xFF8C7A63, "neutral", -1, +1, 0, +1, 0, "auto"),
             new Look("HCBW", "Ricoh Hi-Contrast B&W", 0xFF9E9E9E, "mono", 0, +3, +2, 0, 0, "off", "rough-mono"),
-            new Look("MORI", "Ricoh Moriyama Mono", 0xFF6B6B6B, "mono", 0, +3, +3, 0, 0, "off", "rough-mono"),
+            // Slider path on purpose: a mono Picture Effect would ignore the
+            // sliders and render identically to HCBW. Cam retries rough-mono
+            // only if the body rejects color-mode=mono.
+            new Look("MORI", "Ricoh Moriyama Mono", 0xFF6B6B6B, "mono", 0, +3, +3, 0, 0, "off"),
             new Look("CROSS", "Ricoh Cross Process", 0xFFB07A9E, "vivid", +3, +2, 0, +2, 0, "off"),
             new Look("LEICA-C", "Leica Look Classic", 0xFFB08A6A, "neutral", -1, -1, 0, 0, 0, "auto"),
             new Look("LEICA-N", "Leica Look Natural", 0xFF9AA58E, "standard", 0, 0, 0, 0, 0, "auto")

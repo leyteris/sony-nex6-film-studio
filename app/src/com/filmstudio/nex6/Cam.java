@@ -275,7 +275,7 @@ final class Cam {
         }
         String got = readStyle();
         String gotFx = readEffect();
-        boolean mono = scaled.effect != null;
+        boolean mono = scaled.effect != null || "mono".equals(scaled.style);
         if (mono && !isMonoToken(got) && !isMonoToken(gotFx)) {
             // Neither path stuck: Sony accepts setParameters and may still keep
             // the old values, and a body may spell mono differently. Retry the
@@ -283,7 +283,7 @@ final class Cam {
             got = retryMonoStyle(style);
             gotFx = readEffect();
             if (!isMonoToken(got) && !isMonoToken(gotFx)) {
-                gotFx = retryMonoEffect(effect);
+                gotFx = retryMonoEffect(monoFallbackEffect(effect));
             }
             Log8.event("MONO", "retry cm=" + got + " fx=" + gotFx);
             if (isMonoToken(got)) wanted.put("color-mode", got);
@@ -408,6 +408,12 @@ final class Cam {
      *  scales with strength like the look sliders and clamps at -3. */
     static int neutralFallbackSat(int sat, int strength) {
         return Math.max(-3, sat - Math.round(2 * strength / 100.0f));
+    }
+
+    /** Slider-path mono looks write picture-effect=off; rough-mono is their
+     *  guaranteed-grayscale last resort when the body also rejects mono. */
+    static String monoFallbackEffect(String effect) {
+        return "off".equals(effect) ? "rough-mono" : effect;
     }
 
     private String readStyle() {
