@@ -1,6 +1,6 @@
 # 架构与实现：Film Studio NEX-6
 
-状态：`0.2.19-alpha` 独立外壳已实现，静态验收和模拟器冒烟测试通过；0.2.13 已在用户的 NEX-6 上启动并写卡，但回传日志全 NUL，**各项行为在实机上均未验证**（`camera_tested=false`）。用户在 0.2.15 实机上确认：拨盘在 iAuto / SCN 时黑白出彩色，P/A/S/M 下正常——0.2.16 因此加入底部 `P/A/S/M` 提示。0.2.17 增加两个徕卡参考 Look（经典、自然），风格总数为 17。0.2.18 修复色温写入越界（曾把 K×100 发给相机），风格不再锁色温，改为 AWB + A-B 微调。0.2.19 为中性底风格加入回退：固件风格表不含 neutral 时改发 standard 并额外降饱和。目标机型为 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。
+状态：`0.2.20-alpha` 独立外壳已实现，静态验收和模拟器冒烟测试通过；0.2.13 已在用户的 NEX-6 上启动并写卡，但回传日志全 NUL，**各项行为在实机上均未验证**（`camera_tested=false`）。用户在 0.2.15 实机上确认：拨盘在 iAuto / SCN 时黑白出彩色，P/A/S/M 下正常——0.2.16 因此加入底部 `P/A/S/M` 提示。0.2.17 增加两个徕卡参考 Look（经典、自然），风格总数为 17。0.2.18 修复色温写入越界（曾把 K×100 发给相机），风格不再锁色温，改为 AWB + A-B 微调。0.2.19 为中性底风格加入回退：固件风格表不含 neutral 时改发 standard 并额外降饱和。0.2.20 修复黑白撞车：MORI 改走纯创意风格滑块路径（效果 off），仅当 mono 被拒时回退 rough-mono，三个黑白风格重新可区分。目标机型为 **Sony NEX-6，固件 1.03，Android 2.3.7 / API 10**。
 
 > **English summary.** Film Studio NEX-6 is a standalone PMCA app for the first-generation Sony NEX-6. The a5100 Film Studio engine depends on `CameraEx.setRGBMatrix` and the extended gamma table, which the NEX-6 firmware does not expose. This app therefore keeps the Film Studio look list but expresses each look with runtime `Camera.Parameters` the NEX-6 does accept. It is a plain `Activity` + `SurfaceView` + hand-drawn `Canvas` overlay, with every Sony class reached through reflection. It is an approximation, not a LUT or matrix/gamma port.
 
@@ -54,7 +54,7 @@ native_color_preview_available: false
 
 Neutral 是唯一例外（0.2.19）：NEX-6 这一代创意风格表没有中性，静默忽略会让七个中性底风格保留上一个风格的基调。固件公布的 `color-mode-values` 可读且不含 `neutral` 时改发 `standard`，饱和度再减 `2×强度`（clamp 到 -3）以近似中性的低饱和底，日志记 `STYLE neutral fallback standard sat=…`；表不可读（null）或含 `neutral` 时照发目标值。判定与饱和计算是纯静态方法，host 单测覆盖。
 
-黑白风格再加一条独立路径：ACROS 同时写 `picture-effect=richtone-mono`，HCBW / MORI 写 `rough-mono`。Picture Effect 由相机自己的图像管线处理，不依赖 Creative Style 是否接受 `mono`；只要两路中有一路被保留，成片就应是灰阶。两路都回读并显示在右上角（`CM mono FX richtone-mono`）。效果开启时相机忽略创意风格滑块，因此低强度对对比/锐度的缩放在效果路径下可能不生效——这是为保证黑白而接受的取舍。`rgb-matrix-mode` 未知时不写，避免整个参数包被拒绝。
+黑白风格分两条路径（0.2.20 调整）：ACROS 写 `picture-effect=richtone-mono`，HCBW 写 `rough-mono`。Picture Effect 由相机自己的图像管线处理，不依赖 Creative Style 是否接受 `mono`；只要两路中有一路被保留，成片就应是灰阶。但效果开启时相机忽略创意风格滑块，HCBW 与 MORI 此前同为 `rough-mono`、只差锐度 +2/+3，成片完全相同（撞车）。0.2.20 起 MORI 改走纯滑块路径：`color-mode=mono` + 对比+3/锐度+3、`picture-effect=off`，强度缩放恢复作用；仅当固件拒绝 mono（两路回读都非单色）时才经 `MONO` 重试回退 `rough-mono`，只在该失败情形下与 HCBW 收敛。两路都回读并显示在右上角（`CM mono FX off` / `CM mono FX rough-mono`）。滑块路径的依据是 Recipe Lab 在 NEX-6 实机验证过的纯 mono 配方。`rgb-matrix-mode` 未知时不写，避免整个参数包被拒绝。
 
 ## 4. 应用结构
 
@@ -108,7 +108,7 @@ MainActivity (Activity)
 
 强度为 30% / 50% / 70% / 100%。以 100% 为完整值，低强度对饱和、对比、锐度和 A-B/G-M 做线性缩放并四舍五入；创意风格与 DRO 档位不插值。黑白风格在低强度下仍是黑白；若单色 Picture Effect 生效，对比/锐度滑块可能被相机忽略，灰阶由效果本身决定。
 
-ACROS 另写 `picture-effect=richtone-mono`；HCBW / MORI 写 `rough-mono`（高反差黑白）。
+ACROS 另写 `picture-effect=richtone-mono`；HCBW 写 `rough-mono`（高反差黑白）；MORI 不写效果（纯滑块路径，mono 被拒时回退 rough-mono，0.2.20）。
 
 两个徕卡 Look 参考 [Chai-Yu/sony-a7r2-film-studio](https://github.com/Chai-Yu/sony-a7r2-film-studio) 的命名与机身回退映射：Natural 用 `standard`；Classic 用 `neutral`，再用少量降饱和/降对比近似其回退观感。它们没有使用该项目的 LUT、矩阵或曲线数据。
 

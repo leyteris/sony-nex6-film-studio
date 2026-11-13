@@ -4,7 +4,7 @@
 
 面向 **Sony NEX-6** 的独立、非官方胶片风格应用。它把 Film Studio 的 17 个风格用 NEX-6 支持的运行时相机参数实现，在实时取景上叠加自绘控制界面，并在退出时恢复相机原始参数。
 
-> **当前状态：`0.2.19-alpha`（versionCode 21），尚未取得可用的 NEX-6 实机日志证据。** 0.2.13 已在 NEX-6 上启动并写卡，但回传的 `REPORT.TXT`/`FSLOG.TXT` 经 MTP 复制后全是 NUL。0.2.15 的实机反馈确认了一个关键前提：拨盘在 iAuto / SCN 时黑白风格仍出彩色，转到 P 后正常——这两种自动模式由相机接管创意风格与照片效果。0.2.16 因此在完整面板底部右侧加入橙色 `P/A/S/M:风格` 提示，并保持 0.2.15 的黑白双路径。0.2.17 新增两个徕卡参考 Look（经典、自然），风格总数变为 17。0.2.18 修复色温写入越界（相机曾收到 K×100 的 560000 等值），四个带色温的风格不再锁色温，改为 AWB + A-B 微调；实机反馈的 CHROME/理光负片偏黄、CNEG 偏蓝应随之消失，待实机复验。0.2.19 为七个中性底风格加入回退：NEX-6 这一代创意风格表没有 neutral，Sony 又会静默忽略未知风格，故固件风格表可读且不含 neutral 时改发 standard 并按强度额外降饱和，日志记 `STYLE neutral fallback`。本版已完成构建、API 10 静态验收和 Android 37 模拟器冒烟测试；`camera_tested=false`。在取得实机证据前，本项目不声称兼容或可用。
+> **当前状态：`0.2.20-alpha`（versionCode 22），尚未取得可用的 NEX-6 实机日志证据。** 0.2.13 已在 NEX-6 上启动并写卡，但回传的 `REPORT.TXT`/`FSLOG.TXT` 经 MTP 复制后全是 NUL。0.2.15 的实机反馈确认了一个关键前提：拨盘在 iAuto / SCN 时黑白风格仍出彩色，转到 P 后正常——这两种自动模式由相机接管创意风格与照片效果。0.2.16 因此在完整面板底部右侧加入橙色 `P/A/S/M:风格` 提示，并保持 0.2.15 的黑白双路径。0.2.17 新增两个徕卡参考 Look（经典、自然），风格总数变为 17。0.2.18 修复色温写入越界（相机曾收到 K×100 的 560000 等值），四个带色温的风格不再锁色温，改为 AWB + A-B 微调；实机反馈的 CHROME/理光负片偏黄、CNEG 偏蓝应随之消失，待实机复验。0.2.19 为七个中性底风格加入回退：NEX-6 这一代创意风格表没有 neutral，Sony 又会静默忽略未知风格，故固件风格表可读且不含 neutral 时改发 standard 并按强度额外降饱和，日志记 `STYLE neutral fallback`。0.2.20 修复黑白撞车：HCBW 与 MORI 此前同为 `mono + rough-mono`，照片效果生效时滑块被忽略、成片完全相同；MORI 改走纯创意风格滑块路径（`mono` + 对比+3/锐度+3、照片效果 off），仅当固件拒绝 mono 时回退 rough-mono，ACROS/HCBW 不变，三个黑白重新可区分且 MORI 强度恢复作用。本版已完成构建、API 10 静态验收和 Android 37 模拟器冒烟测试；`camera_tested=false`。在取得实机证据前，本项目不声称兼容或可用。
 
 ## 项目边界
 
@@ -93,11 +93,11 @@ PMCA（PlayMemories Camera Apps）是安装本应用所需的机内平台。安�
 2. 相机已启用 Wi-Fi ADB（Sony-PMCA-RE / OpenMemories: Tweak）；
 3. 电脑已安装 Android Platform-Tools。
 
-在 Releases 页面下载 `FilmStudioNex6-0.2.19-alpha.apk`（由 tag `0.2.19` 触发 CI 构建），或使用本地构建产物 `output/FilmStudioNex6-0.2.19-alpha.apk`，然后：
+在 Releases 页面下载 `FilmStudioNex6-0.2.20-alpha.apk`（由 tag `0.2.20` 触发 CI 构建），或使用本地构建产物 `output/FilmStudioNex6-0.2.20-alpha.apk`，然后：
 
 ```sh
 adb connect CAMERA_IP:5555
-adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.19-alpha.apk
+adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.20-alpha.apk
 ```
 
 `CAMERA_IP` 只是占位符，必须替换为相机当前显示的地址，并保留 `:5555` 端口。分享截图或日志时请遮住真实 IP。
@@ -105,7 +105,7 @@ adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.19-alpha.apk
 当前构建的 SHA-256：
 
 ```text
-6450c4676599a1ca51c4e492f2ee31a56d2f37158a70c9b715789b07d385db6d
+9f9490ace61553a17308eb496cc695d2be860ee0385b4ed1807df494293b26dc
 ```
 
 该 SHA-256 对应本地 `.private/signing.pem` 签名的 `output/` 构建。CI 生成的 Release APK 使用一次性调试密钥，签名和校验值都不同，请以 Release 附带的 `SHA256SUMS.txt` 为准；两者不能互相覆盖安装。
@@ -147,7 +147,7 @@ adb -s CAMERA_IP:5555 pull /sdcard/FSNEX6/REPORT.TXT
 python3 tools/build.py
 ```
 
-产物写入 `output/FilmStudioNex6-0.2.19-alpha.apk`，同时生成 `validation/FilmStudioNex6-0.2.19-alpha.json`。签名默认使用本地 `.private/signing.pem`；该文件不提交、不上传。缺失时脚本会用一次性调试密钥签名，签名不同，不能覆盖安装已发布版本。
+产物写入 `output/FilmStudioNex6-0.2.20-alpha.apk`，同时生成 `validation/FilmStudioNex6-0.2.20-alpha.json`。签名默认使用本地 `.private/signing.pem`；该文件不提交、不上传。缺失时脚本会用一次性调试密钥签名，签名不同，不能覆盖安装已发布版本。
 
 GitHub Actions（[.github/workflows/build.yml](.github/workflows/build.yml)）会在 push 和 PR 时执行 API 10 编译门并构建 APK，产物作为 workflow artifact 下载；推送任意 tag（如 `0.2.17`）时还会创建带 APK、`SHA256SUMS.txt` 和 validation JSON 的预发布 Release。CI 不持有签名私钥，因此 artifact 和 Release 里的 APK 都是一次性调试签名，只用于测试，不能覆盖安装本地构建或正式版本。
 

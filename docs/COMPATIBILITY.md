@@ -44,7 +44,7 @@
 - 这是**参数级近似**。a5100 版的观感来自 3×3 颜色矩阵 + 1024 点 Gamma 曲线，NEX-6 固件没有这些接口。
 - 17 个风格对应 `color-mode`、饱和、对比、锐度、A-B/G-M 微调和 DRO 的组合；白平衡一律 `auto`，不锁色温；不是 3D LUT。
 - 风格名称只用于说明取向，不代表与富士、理光或徕卡官方色彩逐像素一致；两个徕卡 Look 只参考上游 a7R II 版的命名与参数取向。
-- 黑白风格走双路径：ACROS 写 `color-mode=mono` + `picture-effect=richtone-mono`，HCBW/MORI 写 `mono` + `rough-mono`。照片效果开启时 Sony 会忽略创意风格及其滑块，因此黑白强度可能不再改变对比；两路都会回读并显示在右上角 `CM … FX …`，固件拒绝时记录 `MONO` / `DROPPED`。
+- 黑白风格分两条路径：ACROS 写 `color-mode=mono` + `picture-effect=richtone-mono`，HCBW 写 `mono` + `rough-mono`；照片效果开启时 Sony 会忽略创意风格及其滑块，因此这两个风格的强度可能不再改变对比。0.2.20 起 MORI 改走纯滑块路径（`mono` + 对比+3/锐度+3、效果 off），避免与 HCBW 成片撞车，强度缩放恢复作用；仅当固件拒绝 mono 时回退 rough-mono。所有路径都回读并显示在右上角 `CM … FX …`（MORI 为 `FX off`），固件拒绝时记录 `MONO` / `DROPPED`。
 - 强度 30/50/70% 对饱和、对比、锐度和微调做线性缩放；创意风格与 DRO 档位不插值。
 - 某些机身可能丢弃微调或 DRO；应用会写 `DROPPED` 并退化到核心参数。
 - NEX-6 这一代创意风格表没有 `neutral`（标准/生动/肖像/风景/黄昏/夜景/红叶/黑白/棕褐色）。0.2.19 起固件风格表可读且不含 neutral 时，七个中性底风格（CHROME/PRONEG/CNEG/ETERNA/BLEACH/GR-/LEICA-C）回退 `standard` 并按强度额外降饱和（clamp -3），日志 `STYLE neutral fallback standard sat=…`、右上角 `CM standard`；风格表不可读时照发 neutral 由回读决定。
@@ -75,7 +75,7 @@
 
 1. 在目标 NEX-6 上安装、启动，取景和覆盖层持续显示；记录完整面板底部的 `P/A/S/M:风格` 提示；
 2. **把模式拨盘置于 P / A / S / M**；iAuto / SCN 下相机接管风格，黑白出彩色属于预期行为；
-3. 切换全部 17 个风格和 4 档强度，日志有对应 `APPLY`，并记录任何 `DROPPED`；ACROS/HCBW/MORI 还需记录 `CM … FX …` 并确认成片为灰阶；0.2.19 起记录启动 `CAP color-mode=…` 风格表，若不含 neutral 还需记录 `STYLE neutral fallback` 与 `CM standard`；
+3. 切换全部 17 个风格和 4 档强度，日志有对应 `APPLY`，并记录任何 `DROPPED`；ACROS/HCBW/MORI 还需记录 `CM … FX …` 并确认成片为灰阶；0.2.19 起记录启动 `CAP color-mode=…` 风格表，若不含 neutral 还需记录 `STYLE neutral fallback` 与 `CM standard`；0.2.20 起 MORI 应为 `CM mono FX off`、HCBW `FX rough-mono`、ACROS `FX richtone-mono`，三者成片应可区分；
 4. 中央键/快门实际产生 JPEG，`SAVED` 行给出文件名；
 5. S1 对焦框出现并在合焦/失败时变绿/变红；
 6. DELETE/SK2 三阶段可用；

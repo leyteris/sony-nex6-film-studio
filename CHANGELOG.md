@@ -1,5 +1,15 @@
 # 版本历史
 
+## 0.2.20-alpha — 2026-11-13
+
+- 修复黑白撞车：HCBW 与 MORI 此前同为 `mono + rough-mono`、只差锐度 +2/+3，而照片效果生效时 Sony 忽略创意风格滑块，成片完全相同（用户对照渲染图与模拟器反馈：右上角都是 `rough-mono`）；撞车源于 0.2.15 按高反差语义把 HCBW 改成 rough-mono，偏离了上游 a7r2 的 HCBW=richtone-mono / MORI=rough-mono 映射；
+- MORI 改走纯创意风格滑块路径：`color-mode=mono` + 对比+3/锐度+3、`picture-effect=off`，强度缩放恢复作用；ACROS（richtone-mono）与 HCBW（rough-mono）不变，三个黑白重新可区分：ACROS 柔和、HCBW 硬反差、MORI 粗颗粒高反差；
+- 灰阶兜底：Cam 的单色判定改为「风格或效果任一为 mono」；两路回读都非单色时先轮换 mono 别名重试，仍失败经新增静态方法 `monoFallbackEffect` 回退 `rough-mono`，只在该失败情形下与 HCBW 收敛；滑块路径的依据是 Recipe Lab 在 NEX-6 实机验证过的纯 mono 配方；
+- 右上角与日志区分路径：MORI `CM mono FX off`、`APPLY MORI <pct>% mono cm=mono fx=off`；HCBW/ACROS 不变；
+- Manifest 升至 `0.2.20-alpha` / versionCode 22；`tools/build.py`、CI 产物名、README、安装文档与 `validation/` 同步；构建元数据的黑白 limitation 改写为两条路径描述；
+- 构建与验证：`9f9490ac…26dc`、81,367 B、11 个 APK 条目、v1 签名；22 个 class、35 个 `android.*` 类型、0 缺失、dex 035；26 项 host 单测全过（14 项 Neutral 回退 + 12 项黑白路径与风格表）；Android 37 模拟器（简体中文，640×480）复验 MORI 四档强度 `fx=off`、HCBW `fx=rough-mono`、ACROS `fx=richtone-mono`，无 `MONO` 重试、无 `DROPPED`，MENU 退出 `RESTORE ok`，`REPORT.TXT` 2,668 字节、63 行、0 个 NUL；
+- 已知：`camera_tested=false`；实机需确认 MORI 成片为灰阶且与 HCBW 可区分，以及是否出现 `MONO` 回退重试。
+
 ## 0.2.19-alpha — 2026-11-10
 
 - 新增 Neutral 回退：NEX-6 这一代创意风格表没有 `neutral`（标准/生动/肖像/风景/黄昏/夜景/红叶/黑白/棕褐色），而 Sony 对未知 `color-mode` 静默忽略，导致 CHROME/PRONEG/CNEG/ETERNA/BLEACH/GR-/LEICA-C 七个中性底风格会保留上一个风格的基调；现在固件公布的 `color-mode-values` 可读且不含 `neutral` 时改发 `standard` 并额外降饱和 2×强度（clamp 到 -3），日志记 `STYLE neutral fallback standard sat=…`；

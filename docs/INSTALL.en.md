@@ -2,7 +2,7 @@
 
 [Project home](../README.md) · [中文](INSTALL.zh-CN.md)
 
-This guide targets the **Sony NEX-6, firmware 1.03, Android 2.3.7 / API 10**. The current `0.2.19-alpha` build **has not been validated on hardware**. The first-run checklist below is also the list of results worth recording. Use the DISP overlay first; the card files are a supplement.
+This guide targets the **Sony NEX-6, firmware 1.03, Android 2.3.7 / API 10**. The current `0.2.20-alpha` build **has not been validated on hardware**. The first-run checklist below is also the list of results worth recording. Use the DISP overlay first; the card files are a supplement.
 
 > **Do not** use the camera's Settings → Initialize to troubleshoot. The CN2 preset closes the app entry again and the unlock has to be repeated. The unlock parameters apply only to NEX-6 1.03 / `CX76001_CN2`, not to other models or regions.
 
@@ -14,18 +14,18 @@ You need:
 - Wi-Fi ADB enabled on the camera (Sony-PMCA-RE / OpenMemories: Tweak);
 - [Android Platform-Tools / adb](https://developer.android.com/tools/releases/platform-tools) on the computer;
 - sufficient battery, a backed-up card and a working USB connection;
-- `FilmStudioNex6-0.2.19-alpha.apk`.
+- `FilmStudioNex6-0.2.20-alpha.apk`.
 
 The installer adds an ordinary PMCA app. It does not write firmware, camera settings storage or the Backup attribute used by the unlock. Installing this APK is independent of the unlock procedure.
 
 ## 1. Download and verify
 
-Download `FilmStudioNex6-0.2.19-alpha.apk` from Releases (built by CI on tag `0.2.19`), or use the local build at `output/FilmStudioNex6-0.2.19-alpha.apk`.
+Download `FilmStudioNex6-0.2.20-alpha.apk` from Releases (built by CI on tag `0.2.20`), or use the local build at `output/FilmStudioNex6-0.2.20-alpha.apk`.
 
 SHA-256 of the local build:
 
 ```text
-6450c4676599a1ca51c4e492f2ee31a56d2f37158a70c9b715789b07d385db6d
+9f9490ace61553a17308eb496cc695d2be860ee0385b4ed1807df494293b26dc
 ```
 
 > The release APK is CI-signed with a throwaway debug key, so its SHA-256 differs from the local build above. Verify it against the `SHA256SUMS.txt` attached to the release. The two signatures cannot update each other in place; use the local build when you need the checksum documented here.
@@ -33,13 +33,13 @@ SHA-256 of the local build:
 macOS / Linux:
 
 ```sh
-shasum -a 256 FilmStudioNex6-0.2.19-alpha.apk
+shasum -a 256 FilmStudioNex6-0.2.20-alpha.apk
 ```
 
 Windows PowerShell:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\FilmStudioNex6-0.2.19-alpha.apk
+Get-FileHash -Algorithm SHA256 .\FilmStudioNex6-0.2.20-alpha.apk
 ```
 
 This checks file integrity, not compatibility or legal permission.
@@ -60,7 +60,7 @@ adb devices
 ## 3. Install
 
 ```sh
-adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.19-alpha.apk
+adb -s CAMERA_IP:5555 install -r FilmStudioNex6-0.2.20-alpha.apk
 ```
 
 A successful install prints `Success`. The package is `com.filmstudio.nex6`, so it can coexist with the older a5100 Film Studio; no uninstall is required.
@@ -69,7 +69,7 @@ If you see `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, a different-signature copy of `
 
 ```sh
 adb -s CAMERA_IP:5555 uninstall com.filmstudio.nex6
-adb -s CAMERA_IP:5555 install FilmStudioNex6-0.2.19-alpha.apk
+adb -s CAMERA_IP:5555 install FilmStudioNex6-0.2.20-alpha.apk
 ```
 
 **Do not uninstall Sony system packages or any package you do not recognize.** If the only problem is a signature mismatch, rebuild with the same `.private/signing.pem`; that key is not distributed.
